@@ -59,7 +59,7 @@ export class CoinManager {
     }
   }
 
-  public render(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) {
+  public render(ctx: CanvasRenderingContext2D, canvasWidth: number) {
     ctx.save();
 
     // Position in top-right corner
