@@ -1,24 +1,33 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import './style.css';
+import { Game } from './game';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
     <h1>Bake 'n Shake</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+      <button id="startBtn">Start Game</button>
+      <button id="stopBtn">Stop Game</button>
     </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
   </div>
-`
+`;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas');
+if (!canvas) {
+  throw new Error('Canvas element not found');
+}
+
+const game = new Game(canvas);
+
+const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
+const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn');
+
+startBtn?.addEventListener('click', () => {
+  game.start();
+});
+
+stopBtn?.addEventListener('click', () => {
+  game.stop();
+});
+
+game.start();

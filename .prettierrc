@@ -1,5 +1,4 @@
 {
-  "plugins": ["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   "bracketSpacing": true,
   "bracketSameLine": true,
   "quoteProps": "as-needed",
@@ -9,15 +8,6 @@
   "printWidth": 100,
   "tabWidth": 2,
   "arrowParens": "always",
-  "importOrder": [
-    "^@angular/(.*)$",
-    "<THIRD_PARTY_MODULES>",
-    "^@bundesbank/(.*)$",
-    "^[./]"
-  ],
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true,
-  "importOrderParserPlugins": ["typescript", "decorators-legacy"],
   "overrides": [
     {
       "files": ["*.html"],

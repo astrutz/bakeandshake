@@ -5,9 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bake 'n Shake</title>
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <h1>Bake 'n Shake — Canvas Game Loop</h1>
+      <div id="game-container">
+        <canvas id="game"></canvas>
+        <div id="controls">
+          <button id="toggle">Pause</button>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
