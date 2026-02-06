@@ -9,6 +9,8 @@ if (!canvas) {
 
 // Initialize the game
 const game = new Game(canvas);
+await game.loadCollisionsFromTiled('/bakery.json');
+
 
 // Set up controls
 const toggleBtn = document.querySelector<HTMLButtonElement>('#toggle');

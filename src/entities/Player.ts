@@ -30,6 +30,7 @@ export class Player {
     this.sprite = new Image();
     this.sprite.onload = () => {
       this.spriteLoaded = true;
+      console.log('Player sprite loaded');
     };
     this.sprite.onerror = () => {
       console.error('Failed to load player sprite');
@@ -72,15 +73,34 @@ export class Player {
       this.velocityY *= 0.707;
     }
 
-    // Update position
-    this.x += this.velocityX * deltaTime;
-    this.y += this.velocityY * deltaTime;
+    // Calculate potential new position (will be validated by collision system)
+    const potentialX = this.x + this.velocityX * deltaTime;
+    const potentialY = this.y + this.velocityY * deltaTime;
+
+    // Return potential position for collision checking
+    return { potentialX, potentialY };
+  }
+
+  /**
+   * Apply the validated position after collision checking
+   */
+  public applyPosition(x: number, y: number) {
+    this.x = x;
+    this.y = y;
   }
 
   public render(ctx: CanvasRenderingContext2D) {
     if (this.spriteLoaded && this.sprite) {
       // Draw the sprite image scaled to width x height
       ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+    } else {
+      // Fallback: Draw rectangle if sprite not loaded
+      ctx.fillStyle = '#646cff';
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+
+      ctx.strokeStyle = '#535bf2';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(this.x, this.y, this.width, this.height);
     }
   }
 
@@ -92,5 +112,14 @@ export class Player {
   public setPosition(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public getCollisionBox() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+    };
   }
 }
