@@ -6,9 +6,12 @@ import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
+import { SoundManager } from './audio/SoundManager.ts';
+import { SOUND_IDS } from './audio/SoundId.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
+  private soundManager: SoundManager;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
   private dialogBox: DialogBox;
@@ -39,8 +42,9 @@ export class Game {
   private frameCount: number = 0;
   private fpsUpdateTime: number = 0;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
     this.canvas = canvas;
+    this.soundManager = soundManager;
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Failed to get 2D context');
@@ -55,7 +59,7 @@ export class Game {
     this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
 
     // Initialize dialog box
-    this.dialogBox = new DialogBox();
+    this.dialogBox = new DialogBox(soundManager);
 
     // Initialize pause overlay
     this.pauseOverlay = new PauseOverlay();
@@ -156,6 +160,7 @@ export class Game {
         if (this.dialogBox.getIsComplete()) {
           const nextDialog = nearbyNPC.getNextDialog();
           this.dialogBox.show(nextDialog);
+          this.soundManager.playSound(SOUND_IDS.NPC_TALK);
         } else {
           this.dialogBox.skip();
         }
@@ -163,6 +168,7 @@ export class Game {
         // Start new conversation
         const dialog = nearbyNPC.getCurrentDialog();
         this.dialogBox.show(dialog);
+        this.soundManager.playSound(SOUND_IDS.NPC_TALK);
         // Lock player movement when dialog opens
         this.player.setMovementLocked(true);
       }
@@ -202,7 +208,7 @@ export class Game {
       potentialX,
       potentialY,
       this.player.width,
-      this.player.height
+      this.player.height,
     );
 
     // Apply the validated position to the player
@@ -258,7 +264,7 @@ export class Game {
         0,
         0,
         this.canvas.width,
-        this.canvas.height
+        this.canvas.height,
       );
     } else {
       // Show loading text
@@ -291,7 +297,7 @@ export class Game {
       this.player.y,
       this.player.width,
       this.player.height,
-      '#00ff00'
+      '#00ff00',
     );
 
     this.ctx.restore();
