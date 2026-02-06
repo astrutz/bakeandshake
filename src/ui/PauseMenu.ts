@@ -11,10 +11,10 @@ export class PauseMenu {
   private feedbackTimer: number = 0;
   private readonly FEEDBACK_DURATION = 2; // seconds
 
-  // Button dimensions
-  private buttonWidth: number = 300;
-  private buttonHeight: number = 60;
-  private buttonSpacing: number = 20;
+  // Button dimensions (scaled for 1280x960)
+  private buttonWidth: number = 360; // Was 300
+  private buttonHeight: number = 70; // Was 60
+  private buttonSpacing: number = 24; // Was 20
 
   constructor() {}
 
@@ -93,20 +93,20 @@ export class PauseMenu {
 
     // Draw "PAUSED" title
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = `bold ${Fonts.sizes.huge} ${Fonts.body}`;
+    ctx.font = `bold ${Fonts.sizes.massive} ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = Alpha.shadowDark;
     ctx.shadowBlur = 10;
-    ctx.fillText('PAUSED', canvasWidth / 2, 120);
+    ctx.fillText('PAUSED', canvasWidth / 2, 140); // Was 120
 
     // Draw save info if exists
     const saveInfo = SaveManager.getSaveInfo();
     if (saveInfo.exists && saveInfo.timeSince) {
-      ctx.font = `18px ${Fonts.body}`;
+      ctx.font = `${Fonts.sizes.medium} ${Fonts.body}`; // Was 18px, now 22px
       ctx.fillStyle = Colors.chocolate;
       ctx.shadowBlur = 5;
-      ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, 180);
+      ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, 200); // Was 180
     }
 
     ctx.shadowBlur = 0;
@@ -138,7 +138,9 @@ export class PauseMenu {
 
       // Button text
       ctx.fillStyle = isDisabled ? Colors.mediumGray : Colors.moccasin;
-      ctx.font = isSelected ? `bold ${Fonts.sizes.xlarge} ${Fonts.body}` : `${Fonts.sizes.large} ${Fonts.body}`;
+      ctx.font = isSelected
+        ? `bold ${Fonts.sizes.xlarge} ${Fonts.body}`
+        : `${Fonts.sizes.large} ${Fonts.body}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(option, canvasWidth / 2, y + this.buttonHeight / 2);
@@ -146,21 +148,23 @@ export class PauseMenu {
 
     // Draw feedback message
     if (this.feedbackMessage) {
-      const feedbackY = startY + this.menuOptions.length * (this.buttonHeight + this.buttonSpacing) + 40;
+      const feedbackY = startY + this.menuOptions.length * (this.buttonHeight + this.buttonSpacing) + 48; // Was 40
 
       // Fade effect based on timer
       const alpha = Math.min(1, this.feedbackTimer / 0.5);
       ctx.fillStyle = `rgba(255, 228, 181, ${alpha})`;
-      ctx.font = `bold 22px ${Fonts.body}`;
+      ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`; // Was 22px, now 28px
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText(this.feedbackMessage, canvasWidth / 2, feedbackY);
     }
 
     // Draw controls hint
     ctx.fillStyle = Colors.lightGray;
-    ctx.font = `16px ${Fonts.body}`;
+    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was 16px, now 18px
     ctx.textAlign = 'center';
-    ctx.fillText('Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close', canvasWidth / 2, canvasHeight - 40);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close', canvasWidth / 2, canvasHeight - 48); // Was 40
 
     ctx.restore();
   }

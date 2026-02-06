@@ -1,4 +1,4 @@
-import { Colors, Alpha, UI } from '../config/theme';
+import { Colors, Alpha, UI, Fonts } from '../config/theme';
 
 export class CoinManager {
   private coins: number = 0;
@@ -59,18 +59,21 @@ export class CoinManager {
     }
   }
 
-  public render(ctx: CanvasRenderingContext2D, canvasWidth: number) {
+  public render(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) {
     ctx.save();
 
     // Position in top-right corner
-    const x = canvasWidth - 20;
-    const y = 20;
+    const x = canvasWidth - 24; // Was 20
+    const y = 24; // Was 20
 
-    // Coin icon background
-    const iconSize = 32;
+    // Coin icon background (scaled)
+    const iconSize = 36; // Was 32
     const padding = UI.padding.small;
+
+    // Measure text for proper box sizing
+    ctx.font = `bold 28px ${Fonts.body}`; // Was 24px
     const textMetrics = ctx.measureText(this.coins.toString());
-    const boxWidth = iconSize + padding * 3 + textMetrics.width + 20;
+    const boxWidth = iconSize + padding * 3 + textMetrics.width + 24; // Was 20
     const boxHeight = iconSize + padding * 2;
 
     // Background box
@@ -107,14 +110,14 @@ export class CoinManager {
 
     // Coin symbol
     ctx.fillStyle = Colors.saddleBrown;
-    ctx.font = 'bold 18px Arial';
+    ctx.font = `bold 20px ${Fonts.body}`; // Was 18px
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('¢', coinX, coinY);
 
     // Coin count text
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = 'bold 24px Arial';
+    ctx.font = `bold 28px ${Fonts.body}`; // Was 24px
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.coins.toString(), x - padding, y + boxHeight / 2);
