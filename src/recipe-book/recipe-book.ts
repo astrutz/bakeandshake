@@ -152,6 +152,26 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
               `,
             )
             .join('')}
+          <article class="recipe-page recipe-page-back" data-recipe-page="${recipes.length + 1}">
+            <div class="recipe-page-inner recipe-cover-inner">
+              <div class="recipe-cover-frame">
+                <div>
+                  <div class="recipe-cover-title">
+                    <strong>Thanks</strong>
+                  </div>
+                  <div class="recipe-cover-subtitle">See you in the kitchen</div>
+                </div>
+                <div class="recipe-back-blurb">
+                  <p>Stamped by the Bake 'n Shake Mausis.</p>
+                  <p>Handle with flour-dusted hands only.</p>
+                </div>
+                <div class="recipe-cover-authors">
+                  <span>Crafted with butter</span>
+                  <span>and a lot of chaos</span>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
         <div class="recipe-book-nav">
           <button class="recipe-book-arrow" type="button" data-recipe-book-prev aria-label="Previous page">
@@ -194,8 +214,11 @@ export function initRecipeBookOverview() {
   let dragStartX = 0;
   let dragTarget: HTMLElement | null = null;
   let dragDirection: 'next' | 'prev' | null = null;
+  const forwardDuration = '1s';
+  const backwardDuration = '0.6s';
 
   const updatePages = () => {
+    pagesRoot?.style.setProperty('--flip-duration', forwardDuration);
     pages.forEach((page, index) => {
       page.style.zIndex = String(pages.length - index);
       page.style.transform = '';
@@ -246,6 +269,7 @@ export function initRecipeBookOverview() {
 
   prevButton?.addEventListener('click', () => {
     if (currentIndex > 0) {
+      pagesRoot?.style.setProperty('--flip-duration', backwardDuration);
       currentIndex -= 1;
       updatePages();
     }
@@ -283,10 +307,12 @@ export function initRecipeBookOverview() {
         return;
       }
       dragDirection = 'next';
+      pagesRoot.style.setProperty('--flip-duration', forwardDuration);
       const rotation = Math.max(-180, progress * 180);
       dragTarget.style.transform = `rotateY(${rotation}deg)`;
     } else if (progress > 0 && currentIndex > 0) {
       dragDirection = 'prev';
+      pagesRoot.style.setProperty('--flip-duration', backwardDuration);
       const prevPage = pages[currentIndex - 1];
       dragTarget = prevPage;
       const rotation = -180 + progress * 180;

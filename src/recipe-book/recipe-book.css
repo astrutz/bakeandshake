@@ -8,6 +8,7 @@
   --rb-amber: #f6b96a;
   --rb-ember: #7b3f1f;
   --rb-shadow: rgba(26, 18, 10, 0.4);
+  --flip-duration: 0.5s;
 }
 
 .recipe-book-overlay {
@@ -101,7 +102,7 @@
   inset: 0;
   transform-origin: left center;
   transform-style: preserve-3d;
-  transition: transform 1s ease, box-shadow 1s ease;
+  transition: transform var(--flip-duration, 1s) ease, box-shadow var(--flip-duration, 1s) ease;
   backface-visibility: hidden;
   z-index: 1;
 }
