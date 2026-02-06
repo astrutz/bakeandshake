@@ -1,4 +1,5 @@
 import { Colors } from '../config/theme';
+import { GameConfig } from '../config/gameConfig.ts';
 
 export interface NPCConfig {
   id: string;
@@ -31,10 +32,10 @@ export class NPC {
     this.name = config.name;
     this.x = config.x;
     this.y = config.y;
-    this.width = config.width || 50;
-    this.height = config.height || 50;
+    this.width = config.width || GameConfig.npc.defaultWidth;
+    this.height = config.height || GameConfig.npc.defaultHeight;
     this.dialogLines = config.dialogLines;
-    this.interactionRadius = config.interactionRadius || 80;
+    this.interactionRadius = config.interactionRadius || GameConfig.npc.defaultInteractionRadius;
 
     if (config.spritePath) {
       this.loadSprite(config.spritePath);
@@ -137,7 +138,7 @@ export class NPC {
     playerX: number,
     playerY: number,
     playerWidth: number,
-    playerHeight: number,
+    playerHeight: number
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;
