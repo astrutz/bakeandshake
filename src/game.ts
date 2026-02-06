@@ -1,5 +1,6 @@
 import { Player } from './entities/Player';
 import { DialogBox } from './ui/DialogBox';
+import { PauseOverlay } from './ui/PauseOverlay';
 import { CollisionSystem } from './physics/CollisionSystem';
 import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
@@ -11,6 +12,7 @@ export class Game {
   private ctx: CanvasRenderingContext2D;
   private player: Player;
   private dialogBox: DialogBox;
+  private pauseOverlay: PauseOverlay;
   private collisionSystem: CollisionSystem;
   private debugRenderer: DebugRenderer;
   private npcManager: NPCManager;
@@ -54,6 +56,9 @@ export class Game {
 
     // Initialize dialog box
     this.dialogBox = new DialogBox();
+
+    // Initialize pause overlay
+    this.pauseOverlay = new PauseOverlay();
 
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
@@ -101,6 +106,18 @@ export class Game {
     window.addEventListener('keydown', (e) => {
       if (this.keys[e.key]) return; // Prevent repeat
       this.keys[e.key] = true;
+
+      // Toggle pause with P key
+      if (e.key === 'p' || e.key === 'P') {
+        this.pauseOverlay.toggle();
+        console.log(`Game ${this.pauseOverlay.isPausedState() ? 'paused' : 'resumed'}`);
+        return;
+      }
+
+      // Don't process other keys if paused
+      if (this.pauseOverlay.isPausedState()) {
+        return;
+      }
 
       // Interact with nearby NPC using E key
       if (e.key === 'e' || e.key === 'E') {
@@ -170,6 +187,11 @@ export class Game {
   }
 
   private update(deltaTime: number) {
+    // Don't update game state if paused
+    if (this.pauseOverlay.isPausedState()) {
+      return;
+    }
+
     // Update player and get potential new position
     const { potentialX, potentialY } = this.player.update(deltaTime);
 
@@ -180,7 +202,7 @@ export class Game {
       potentialX,
       potentialY,
       this.player.width,
-      this.player.height,
+      this.player.height
     );
 
     // Apply the validated position to the player
@@ -236,7 +258,7 @@ export class Game {
         0,
         0,
         this.canvas.width,
-        this.canvas.height,
+        this.canvas.height
       );
     } else {
       // Show loading text
@@ -269,13 +291,16 @@ export class Game {
       this.player.y,
       this.player.width,
       this.player.height,
-      '#00ff00',
+      '#00ff00'
     );
 
     this.ctx.restore();
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render pause overlay (must be on top of everything)
+    this.pauseOverlay.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render debug info overlay
     this.debugRenderer.renderInfo(this.ctx, {
@@ -330,5 +355,9 @@ export class Game {
 
   public getNPCManager(): NPCManager {
     return this.npcManager;
+  }
+
+  public getPauseOverlay(): PauseOverlay {
+    return this.pauseOverlay;
   }
 }
