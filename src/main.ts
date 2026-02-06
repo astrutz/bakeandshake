@@ -13,18 +13,14 @@ const game = new Game(canvas);
 await game.loadCollisionsFromTiled('/bakery.json');
 
 const ambientManager = new AmbientAudioManager(
-    [
-      '/audio/Frische_Brötchen_warme_Herzen.mp3',
-      '/audio/Frische_Brötchen_warme_Herzen_2.mp3',
-    ],
-    {
-      maxVolume: 0.35,
-      fadeDuration: 1000,
-      pauseMin: 1,
-      pauseMax: 15000
-    }
+  ['/audio/Frische_Brötchen_warme_Herzen.mp3', '/audio/Frische_Brötchen_warme_Herzen_2.mp3'],
+  {
+    maxVolume: 0.35,
+    fadeDuration: 1000,
+    pauseMin: 1,
+    pauseMax: 15000,
+  },
 );
-
 
 const musicToggleBtn = document.querySelector<HTMLButtonElement>('#music');
 
@@ -44,23 +40,20 @@ toggleBtn?.addEventListener('click', () => {
   isRunning = !isRunning;
 });
 
-
 // Musik Toggle Button
 let musicRunning = false;
 
 musicToggleBtn?.addEventListener('click', async () => {
-
   if (!musicRunning) {
-    musicToggleBtn.textContent = "Stop Musik";
-    await ambientManager.start();
+    musicToggleBtn.textContent = 'Stop Musik';
+    ambientManager.start();
   } else {
-    musicToggleBtn.textContent = "Spiel Musik ab";
-    await ambientManager.stop();
+    musicToggleBtn.textContent = 'Spiel Musik ab';
+    ambientManager.stop();
   }
 
   musicRunning = !musicRunning;
 });
-
 
 // optional: Autostart Game
 game.start();
