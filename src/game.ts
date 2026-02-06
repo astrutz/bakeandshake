@@ -1,16 +1,43 @@
+import { Player } from './entities/Player';
+import { DialogBox } from './ui/DialogBox';
+import { PauseOverlay } from './ui/PauseOverlay';
+import { CollisionSystem } from './physics/CollisionSystem';
+import { DebugRenderer } from './utils/DebugRenderer';
+import { NPCManager } from './managers/NPCManager';
+import { testCollisions, loadCollisionsFromFile } from './data/collisions';
+import { npcConfigs } from './data/npcs';
+
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    velocityX: number;
-    velocityY: number;
-  };
+  private player: Player;
+  private dialogBox: DialogBox;
+  private pauseOverlay: PauseOverlay;
+  private collisionSystem: CollisionSystem;
+  private debugRenderer: DebugRenderer;
+  private npcManager: NPCManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
+
+  // Camera/viewport for the map
+  private camera = {
+    x: 0,
+    y: 0,
+  };
+
+  // Background map image
+  private mapImage: HTMLImageElement | null = null;
+  private mapLoaded: boolean = false;
+  private mapWidth: number = 2000;
+  private mapHeight: number = 1500;
+
+  // Keyboard controls for dialog
+  private keys: { [key: string]: boolean } = {};
+
+  // FPS tracking for debug
+  private fps: number = 0;
+  private frameCount: number = 0;
+  private fpsUpdateTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,38 +47,199 @@ export class Game {
     }
     this.ctx = context;
 
-    this.rect = {
-      x: 100,
-      y: 100,
-      width: 50,
-      height: 50,
-      velocityX: 100, // pixels per second
-      velocityY: 80, // pixels per second
-    };
+    // Set fixed canvas resolution for pixel art
+    this.canvas.width = 1200;
+    this.canvas.height = 900;
 
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
+    // Initialize player at center of screen
+    this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
+
+    // Initialize dialog box
+    this.dialogBox = new DialogBox();
+
+    // Initialize pause overlay
+    this.pauseOverlay = new PauseOverlay();
+
+    // Initialize collision system with test data
+    this.collisionSystem = new CollisionSystem(testCollisions);
+
+    // Initialize NPC manager and add NPCs
+    this.npcManager = new NPCManager();
+    this.loadNPCs();
+
+    // Register NPC collisions
+    this.npcManager.registerCollisions(this.collisionSystem);
+
+    // Initialize debug renderer
+    this.debugRenderer = new DebugRenderer();
+
+    // Load the background map image
+    this.loadMapImage();
+
+    // Setup keyboard controls for dialog
+    this.setupKeyboardControls();
   }
 
-  private resizeCanvas() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+  private loadNPCs() {
+    npcConfigs.forEach((config) => {
+      this.npcManager.addNPC(config);
+    });
+    console.log(`Loaded ${npcConfigs.length} NPCs`);
+  }
+
+  /**
+   * Load collision data from a Tiled JSON export
+   * Call this when you have your Tiled map ready
+   * Example: game.loadCollisionsFromTiled('/maps/bakery.json');
+   */
+  public async loadCollisionsFromTiled(jsonPath: string) {
+    const collisions = await loadCollisionsFromFile(jsonPath);
+    if (collisions.length > 0) {
+      this.collisionSystem.clearCollisionRects();
+      this.collisionSystem.addCollisionRects(collisions);
+      // Re-register NPC collisions
+      this.npcManager.registerCollisions(this.collisionSystem);
+    }
+  }
+
+  private setupKeyboardControls() {
+    window.addEventListener('keydown', (e) => {
+      if (this.keys[e.key]) return; // Prevent repeat
+      this.keys[e.key] = true;
+
+      // Toggle pause with P key
+      if (e.key === 'p' || e.key === 'P') {
+        this.pauseOverlay.toggle();
+        console.log(`Game ${this.pauseOverlay.isPausedState() ? 'paused' : 'resumed'}`);
+        return;
+      }
+
+      // Don't process other keys if paused
+      if (this.pauseOverlay.isPausedState()) {
+        return;
+      }
+
+      // Interact with nearby NPC using E key
+      if (e.key === 'e' || e.key === 'E') {
+        this.handleInteraction();
+      }
+
+      // Skip dialog with Space or Enter
+      if ((e.key === ' ' || e.key === 'Enter') && this.dialogBox.getIsVisible()) {
+        if (this.dialogBox.getIsComplete()) {
+          this.dialogBox.hide();
+          // Unlock player movement when dialog closes
+          this.player.setMovementLocked(false);
+        } else {
+          this.dialogBox.skip();
+        }
+      }
+
+      // Allow ESC to close dialog
+      if (e.key === 'Escape' && this.dialogBox.getIsVisible()) {
+        this.dialogBox.hide();
+        this.player.setMovementLocked(false);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      this.keys[e.key] = false;
+    });
+  }
+
+  private handleInteraction() {
+    const nearbyNPC = this.npcManager.getNearbyNPC();
+
+    if (nearbyNPC) {
+      if (this.dialogBox.getIsVisible()) {
+        // If dialog is already showing, advance to next line
+        if (this.dialogBox.getIsComplete()) {
+          const nextDialog = nearbyNPC.getNextDialog();
+          this.dialogBox.show(nextDialog);
+        } else {
+          this.dialogBox.skip();
+        }
+      } else {
+        // Start new conversation
+        const dialog = nearbyNPC.getCurrentDialog();
+        this.dialogBox.show(dialog);
+        // Lock player movement when dialog opens
+        this.player.setMovementLocked(true);
+      }
+    }
+  }
+
+  private loadMapImage() {
+    this.mapImage = new Image();
+    this.mapImage.onload = () => {
+      this.mapLoaded = true;
+      if (this.mapImage) {
+        this.mapWidth = this.mapImage.width;
+        this.mapHeight = this.mapImage.height;
+        console.log(`Map loaded: ${this.mapWidth}x${this.mapHeight}`);
+      }
+    };
+    this.mapImage.onerror = () => {
+      console.error('Failed to load map image');
+      this.mapLoaded = false;
+    };
+    this.mapImage.src = '/test.jpg';
   }
 
   private update(deltaTime: number) {
-    // Update rectangle position
-    this.rect.x += this.rect.velocityX * deltaTime;
-    this.rect.y += this.rect.velocityY * deltaTime;
+    // Don't update game state if paused
+    if (this.pauseOverlay.isPausedState()) {
+      return;
+    }
 
-    // Bounce off walls
-    if (this.rect.x + this.rect.width > this.canvas.width || this.rect.x < 0) {
-      this.rect.velocityX *= -1;
-      this.rect.x = Math.max(0, Math.min(this.rect.x, this.canvas.width - this.rect.width));
+    // Update player and get potential new position
+    const { potentialX, potentialY } = this.player.update(deltaTime);
+
+    // Resolve collision and get validated position
+    const validatedPosition = this.collisionSystem.resolveCollision(
+      this.player.x,
+      this.player.y,
+      potentialX,
+      potentialY,
+      this.player.width,
+      this.player.height
+    );
+
+    // Apply the validated position to the player
+    this.player.applyPosition(validatedPosition.x, validatedPosition.y);
+
+    // Update camera to follow player
+    this.updateCamera();
+
+    // Update NPCs (check for nearby NPCs)
+    this.npcManager.update(this.player);
+
+    // Update dialog box
+    this.dialogBox.update(deltaTime);
+
+    // Update FPS counter
+    this.updateFPS(deltaTime);
+  }
+
+  private updateFPS(deltaTime: number) {
+    this.frameCount++;
+    this.fpsUpdateTime += deltaTime;
+
+    if (this.fpsUpdateTime >= 1.0) {
+      this.fps = this.frameCount / this.fpsUpdateTime;
+      this.frameCount = 0;
+      this.fpsUpdateTime = 0;
     }
-    if (this.rect.y + this.rect.height > this.canvas.height || this.rect.y < 0) {
-      this.rect.velocityY *= -1;
-      this.rect.y = Math.max(0, Math.min(this.rect.y, this.canvas.height - this.rect.height));
-    }
+  }
+
+  private updateCamera() {
+    // Center camera on player
+    this.camera.x = this.player.x + this.player.width / 2 - this.canvas.width / 2;
+    this.camera.y = this.player.y + this.player.height / 2 - this.canvas.height / 2;
+
+    // Clamp camera to map boundaries
+    this.camera.x = Math.max(0, Math.min(this.camera.x, this.mapWidth - this.canvas.width));
+    this.camera.y = Math.max(0, Math.min(this.camera.y, this.mapHeight - this.canvas.height));
   }
 
   private render() {
@@ -59,14 +247,68 @@ export class Game {
     this.ctx.fillStyle = '#1a1a1a';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw rectangle
-    this.ctx.fillStyle = '#646cff';
-    this.ctx.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+    // Draw the map portion (if loaded)
+    if (this.mapLoaded && this.mapImage) {
+      this.ctx.drawImage(
+        this.mapImage,
+        this.camera.x,
+        this.camera.y,
+        this.canvas.width,
+        this.canvas.height,
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
+    } else {
+      // Show loading text
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = '24px Arial';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('Loading map...', this.canvas.width / 2, this.canvas.height / 2);
+    }
 
-    // Optional: Draw a border
-    this.ctx.strokeStyle = '#535bf2';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+    // Save context for camera-relative rendering
+    this.ctx.save();
+    this.ctx.translate(-this.camera.x, -this.camera.y);
+
+    // Render collision boxes in debug mode
+    this.debugRenderer.renderCollisions(this.ctx, this.collisionSystem);
+
+    // Render NPCs
+    this.npcManager.render(this.ctx);
+
+    // Render player
+    this.player.render(this.ctx);
+
+    // Render interaction prompts (must be after NPCs and player for proper layering)
+    this.npcManager.renderInteractionPrompts(this.ctx);
+
+    // Render player bounding box in debug mode
+    this.debugRenderer.renderEntityBounds(
+      this.ctx,
+      this.player.x,
+      this.player.y,
+      this.player.width,
+      this.player.height,
+      '#00ff00'
+    );
+
+    this.ctx.restore();
+
+    // Render dialog box (always on top, not affected by camera)
+    this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render pause overlay (must be on top of everything)
+    this.pauseOverlay.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render debug info overlay
+    this.debugRenderer.renderInfo(this.ctx, {
+      player: this.player,
+      camera: this.camera,
+      collisionCount: this.collisionSystem.getCollisionRects().length,
+      fps: this.fps,
+    });
   }
 
   private gameLoop = (currentTime: number) => {
@@ -97,5 +339,25 @@ export class Game {
       this.animationFrameId = null;
       this.lastTime = 0;
     }
+  }
+
+  public getPlayer(): Player {
+    return this.player;
+  }
+
+  public getCollisionSystem(): CollisionSystem {
+    return this.collisionSystem;
+  }
+
+  public getDebugRenderer(): DebugRenderer {
+    return this.debugRenderer;
+  }
+
+  public getNPCManager(): NPCManager {
+    return this.npcManager;
+  }
+
+  public getPauseOverlay(): PauseOverlay {
+    return this.pauseOverlay;
   }
 }

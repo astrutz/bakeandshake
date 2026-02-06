@@ -2,24 +2,15 @@ import './style.css';
 import { Game } from './game';
 import { AmbientAudioManager } from './AmbientAudioManager';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <h1>Bake 'n Shake</h1>
-    <canvas id="gameCanvas"></canvas>
-    <div class="controls">
-      <button id="startBtn">Start Game</button>
-      <button id="stopBtn">Stop Game</button>
-      <button id="musicToggleBtn">Spiel Musik ab</button>
-    </div>
-  </div>
-`;
-
-const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas');
+// Get the existing canvas element
+const canvas = document.querySelector<HTMLCanvasElement>('#game');
 if (!canvas) {
   throw new Error('Canvas element not found');
 }
 
+// Initialize the game
 const game = new Game(canvas);
+await game.loadCollisionsFromTiled('/bakery.json');
 
 const ambientManager = new AmbientAudioManager(
     [
@@ -35,16 +26,22 @@ const ambientManager = new AmbientAudioManager(
 );
 
 
-const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
-const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn');
-const musicToggleBtn = document.querySelector<HTMLButtonElement>('#musicToggleBtn');
+const musicToggleBtn = document.querySelector<HTMLButtonElement>('#music');
 
-startBtn?.addEventListener('click', () => {
-  game.start();
-});
+// Set up controls
+const toggleBtn = document.querySelector<HTMLButtonElement>('#toggle');
 
-stopBtn?.addEventListener('click', () => {
-  game.stop();
+let isRunning = true;
+
+toggleBtn?.addEventListener('click', () => {
+  if (isRunning) {
+    game.stop();
+    toggleBtn.textContent = 'Resume';
+  } else {
+    game.start();
+    toggleBtn.textContent = 'Pause';
+  }
+  isRunning = !isRunning;
 });
 
 
