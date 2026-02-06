@@ -1,24 +1,32 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import './style.css';
+import { Game } from './game';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Bake 'n Shake</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+// Get the existing canvas element
+const canvas = document.querySelector<HTMLCanvasElement>('#game');
+if (!canvas) {
+  throw new Error('Canvas element not found');
+}
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// Initialize the game
+const game = new Game(canvas);
+await game.loadCollisionsFromTiled('/bakery.json');
+
+
+// Set up controls
+const toggleBtn = document.querySelector<HTMLButtonElement>('#toggle');
+
+let isRunning = true;
+
+toggleBtn?.addEventListener('click', () => {
+  if (isRunning) {
+    game.stop();
+    toggleBtn.textContent = 'Resume';
+  } else {
+    game.start();
+    toggleBtn.textContent = 'Pause';
+  }
+  isRunning = !isRunning;
+});
+
+// Auto-start the game
+game.start();

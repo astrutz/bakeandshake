@@ -1,0 +1,11 @@
+{
+  "layers": [
+    {
+      "name": "Collision",
+      "type": "objectgroup",
+      "objects": [
+        {"x": 100, "y": 100, "width": 200, "height": 50}
+      ]
+    }
+  ]
+}
