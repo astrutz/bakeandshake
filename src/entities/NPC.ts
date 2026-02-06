@@ -1,5 +1,5 @@
-import { Colors } from '../config/theme';
-import { GameConfig } from '../config/gameConfig.ts';
+import { Colors, Fonts } from '../config/theme';
+import { GameConfig } from '../config/gameConfig';
 
 export interface NPCConfig {
   id: string;
@@ -70,10 +70,10 @@ export class NPC {
       // Draw name label
       ctx.save();
       ctx.fillStyle = Colors.white;
-      ctx.font = '12px Arial';
+      ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(this.name, this.x + this.width / 2, this.y - 5);
+      ctx.fillText(this.name, this.x + this.width / 2, this.y - 6);
       ctx.restore();
     }
   }
@@ -83,23 +83,23 @@ export class NPC {
 
     // Draw "Press E" prompt above NPC
     const promptX = this.x + this.width / 2;
-    const promptY = this.y - 30;
+    const promptY = this.y - 40; // Was 36
 
-    // Background
+    // Background (larger box)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(promptX - 35, promptY - 15, 70, 20);
+    ctx.fillRect(promptX - 50, promptY - 20, 100, 28); // Was 42, 18, 84, 24
 
     // Border
     ctx.strokeStyle = Colors.moccasin;
     ctx.lineWidth = 2;
-    ctx.strokeRect(promptX - 35, promptY - 15, 70, 20);
+    ctx.strokeRect(promptX - 50, promptY - 20, 100, 28);
 
-    // Text
+    // Text (larger font)
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = 'bold 12px Arial';
+    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Press E', promptX, promptY - 5);
+    ctx.fillText('Press E', promptX, promptY - 6);
 
     ctx.restore();
   }

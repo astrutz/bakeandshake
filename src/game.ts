@@ -8,7 +8,7 @@ import { CoinManager } from './managers/CoinManager';
 import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
-import { GameConfig } from './config/gameConfig.ts';
+import { GameConfig } from './config/gameConfig';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -50,6 +50,9 @@ export class Game {
       throw new Error('Failed to get 2D context');
     }
     this.ctx = context;
+
+    // Disable image smoothing for crisp pixel art
+    this.ctx.imageSmoothingEnabled = false;
 
     // Set canvas resolution for 32x32 tiles (40×30 tiles = 1280×960)
     this.canvas.width = GameConfig.canvas.width;
@@ -409,7 +412,7 @@ export class Game {
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width);
+    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);

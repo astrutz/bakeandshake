@@ -58,9 +58,9 @@ export const Theme = {
     },
 
     padding: {
-      small: 8,
-      medium: 20,
-      large: 40,
+      small: 10,
+      medium: 24,
+      large: 48,
     },
 
     borderRadius: {
@@ -70,18 +70,18 @@ export const Theme = {
     },
   },
 
-  // Fonts
+  // Fonts (scaled for 1280x960 canvas)
   fonts: {
     body: 'Arial',
     monospace: '"Courier New", monospace',
     sizes: {
-      tiny: '12px',
-      small: '16px',
-      medium: '20px',
-      large: '24px',
-      xlarge: '28px',
-      huge: '64px',
-      massive: '72px',
+      tiny: '14px',
+      small: '18px',
+      medium: '22px',
+      large: '28px',
+      xlarge: '32px',
+      huge: '72px',
+      massive: '80px',
     },
   },
 } as const;
