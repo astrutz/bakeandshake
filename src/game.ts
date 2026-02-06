@@ -8,6 +8,7 @@ import { CoinManager } from './managers/CoinManager';
 import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
+import { GameConfig } from './config/gameConfig';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -31,8 +32,8 @@ export class Game {
   // Background map image
   private mapImage: HTMLImageElement | null = null;
   private mapLoaded: boolean = false;
-  private mapWidth: number = 2000;
-  private mapHeight: number = 1500;
+  private mapWidth: number = GameConfig.map.width;
+  private mapHeight: number = GameConfig.map.height;
 
   // Keyboard controls for dialog
   private keys: { [key: string]: boolean } = {};
@@ -50,12 +51,22 @@ export class Game {
     }
     this.ctx = context;
 
-    // Set fixed canvas resolution for pixel art
-    this.canvas.width = 1200;
-    this.canvas.height = 900;
+    // Disable image smoothing for crisp pixel art
+    this.ctx.imageSmoothingEnabled = false;
 
-    // Initialize player at center of screen
-    this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
+    // Set canvas resolution for 32x32 tiles (40×30 tiles = 1280×960)
+    this.canvas.width = GameConfig.canvas.width;
+    this.canvas.height = GameConfig.canvas.height;
+
+    console.log(`Canvas: ${this.canvas.width}×${this.canvas.height} (${GameConfig.canvas.tilesX}×${GameConfig.canvas.tilesY} tiles of ${GameConfig.canvas.tileSize}px)`);
+
+    // Initialize player at center of screen (1 tile = 32×32)
+    this.player = new Player(
+      this.canvas.width / 2 - GameConfig.player.width / 2,
+      this.canvas.height / 2 - GameConfig.player.height / 2,
+      GameConfig.player.width,
+      GameConfig.player.height
+    );
 
     // Initialize dialog box
     this.dialogBox = new DialogBox();
@@ -401,7 +412,7 @@ export class Game {
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width);
+    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);

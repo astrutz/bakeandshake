@@ -1,3 +1,5 @@
+import { GameConfig } from '../config/gameConfig.ts';
+
 export class Player {
   public x: number;
   public y: number;
@@ -12,12 +14,12 @@ export class Player {
 
   // Keyboard controls
   private keys: { [key: string]: boolean } = {};
-  private speed: number = 200; // pixels per second
+  private speed: number = GameConfig.player.speed;
 
   // Movement lock
   private movementLocked: boolean = false;
 
-  constructor(x: number, y: number, width: number = 50, height: number = 50) {
+  constructor(x: number, y: number, width: number = GameConfig.player.width, height: number = GameConfig.player.height) {
     this.x = x;
     this.y = y;
     this.width = width;
