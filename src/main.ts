@@ -1,5 +1,6 @@
 import './style.css';
 import { Game } from './game';
+import { initRecipeBookOverview } from './recipe-book/recipe-book';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -30,3 +31,6 @@ toggleBtn?.addEventListener('click', () => {
 
 // Auto-start the game
 game.start();
+
+// Initialize recipe book overview overlay
+initRecipeBookOverview();
