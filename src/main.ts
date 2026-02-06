@@ -1,6 +1,6 @@
 import './style.css';
 import { Game } from './game';
-import { AmbientAudioManager } from './AmbientAudioManager';
+import { AmbientAudioManager } from './util/AmbientAudioManager.ts';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -19,8 +19,8 @@ const ambientManager = new AmbientAudioManager(
     ],
     {
       maxVolume: 0.35,
-      fadeDuration: 4000,
-      pauseMin: 5000,
+      fadeDuration: 1000,
+      pauseMin: 1,
       pauseMax: 15000
     }
 );
@@ -51,11 +51,11 @@ let musicRunning = false;
 musicToggleBtn?.addEventListener('click', async () => {
 
   if (!musicRunning) {
-    await ambientManager.start();
     musicToggleBtn.textContent = "Stop Musik";
+    await ambientManager.start();
   } else {
-    await ambientManager.stop();
     musicToggleBtn.textContent = "Spiel Musik ab";
+    await ambientManager.stop();
   }
 
   musicRunning = !musicRunning;
