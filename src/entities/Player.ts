@@ -14,6 +14,9 @@ export class Player {
   private keys: { [key: string]: boolean } = {};
   private speed: number = 200; // pixels per second
 
+  // Movement lock
+  private movementLocked: boolean = false;
+
   constructor(x: number, y: number, width: number = 50, height: number = 50) {
     this.x = x;
     this.y = y;
@@ -49,10 +52,15 @@ export class Player {
     });
   }
 
-  public update(deltaTime: number, canvasWidth: number, canvasHeight: number) {
+  public update(deltaTime: number) {
     // Handle keyboard input
     this.velocityX = 0;
     this.velocityY = 0;
+
+    // Don't allow movement if locked (e.g., during dialog)
+    if (this.movementLocked) {
+      return { potentialX: this.x, potentialY: this.y };
+    }
 
     if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
       this.velocityX = -this.speed;
@@ -73,21 +81,41 @@ export class Player {
       this.velocityY *= 0.707;
     }
 
-    // Update position
-    this.x += this.velocityX * deltaTime;
-    this.y += this.velocityY * deltaTime;
+    // Calculate potential new position (will be validated by collision system)
+    const potentialX = this.x + this.velocityX * deltaTime;
+    const potentialY = this.y + this.velocityY * deltaTime;
+
+    // Return potential position for collision checking
+    return { potentialX, potentialY };
+  }
+
+  /**
+   * Apply the validated position after collision checking
+   */
+  public applyPosition(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  /**
+   * Lock or unlock player movement (e.g., during dialogs)
+   */
+  public setMovementLocked(locked: boolean) {
+    this.movementLocked = locked;
+    if (locked) {
+      this.velocityX = 0;
+      this.velocityY = 0;
+    }
+  }
+
+  public isMovementLocked(): boolean {
+    return this.movementLocked;
   }
 
   public render(ctx: CanvasRenderingContext2D) {
     if (this.spriteLoaded && this.sprite) {
       // Draw the sprite image scaled to width x height
-      ctx.drawImage(
-        this.sprite,
-        this.x,
-        this.y,
-        this.width,
-        this.height
-      );
+      ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
     } else {
       // Fallback: Draw rectangle if sprite not loaded
       ctx.fillStyle = '#646cff';
@@ -107,5 +135,14 @@ export class Player {
   public setPosition(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public getCollisionBox() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+    };
   }
 }

@@ -1,9 +1,24 @@
 import { Player } from './entities/Player';
+import { DialogBox } from './ui/DialogBox';
+import { PauseMenu } from './ui/PauseMenu';
+import { CollisionSystem } from './physics/CollisionSystem';
+import { DebugRenderer } from './utils/DebugRenderer';
+import { NPCManager } from './managers/NPCManager';
+import { CoinManager } from './managers/CoinManager';
+import { SaveManager } from './managers/SaveManager';
+import { testCollisions, loadCollisionsFromFile } from './data/collisions';
+import { npcConfigs } from './data/npcs';
 
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
+  private dialogBox: DialogBox;
+  private pauseMenu: PauseMenu;
+  private collisionSystem: CollisionSystem;
+  private debugRenderer: DebugRenderer;
+  private npcManager: NPCManager;
+  private coinManager: CoinManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -16,8 +31,16 @@ export class Game {
   // Background map image
   private mapImage: HTMLImageElement | null = null;
   private mapLoaded: boolean = false;
-  private mapWidth: number = 2000; // Will be updated when image loads
-  private mapHeight: number = 1500; // Will be updated when image loads
+  private mapWidth: number = 2000;
+  private mapHeight: number = 1500;
+
+  // Keyboard controls for dialog
+  private keys: { [key: string]: boolean } = {};
+
+  // FPS tracking for debug
+  private fps: number = 0;
+  private frameCount: number = 0;
+  private fpsUpdateTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -34,8 +57,211 @@ export class Game {
     // Initialize player at center of screen
     this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
 
+    // Initialize dialog box
+    this.dialogBox = new DialogBox();
+
+    // Initialize pause menu
+    this.pauseMenu = new PauseMenu();
+
+    // Initialize coin manager
+    this.coinManager = new CoinManager(0);
+
+    // Initialize collision system with test data
+    this.collisionSystem = new CollisionSystem(testCollisions);
+
+    // Initialize NPC manager and add NPCs
+    this.npcManager = new NPCManager();
+    this.loadNPCs();
+
+    // Register NPC collisions
+    this.npcManager.registerCollisions(this.collisionSystem);
+
+    // Initialize debug renderer
+    this.debugRenderer = new DebugRenderer();
+
     // Load the background map image
     this.loadMapImage();
+
+    // Setup keyboard controls for dialog
+    this.setupKeyboardControls();
+
+    // Try to auto-load save on startup
+    this.tryAutoLoad();
+  }
+
+  private tryAutoLoad() {
+    if (SaveManager.hasSave()) {
+      console.log('Save file detected. Press "Load Game" in pause menu to continue.');
+    }
+  }
+
+  private loadNPCs() {
+    npcConfigs.forEach((config) => {
+      this.npcManager.addNPC(config);
+    });
+    console.log(`Loaded ${npcConfigs.length} NPCs`);
+  }
+
+  /**
+   * Load collision data from a Tiled JSON export
+   * Call this when you have your Tiled map ready
+   * Example: game.loadCollisionsFromTiled('/maps/bakery.json');
+   */
+  public async loadCollisionsFromTiled(jsonPath: string) {
+    const collisions = await loadCollisionsFromFile(jsonPath);
+    if (collisions.length > 0) {
+      this.collisionSystem.clearCollisionRects();
+      this.collisionSystem.addCollisionRects(collisions);
+      // Re-register NPC collisions
+      this.npcManager.registerCollisions(this.collisionSystem);
+    }
+  }
+
+  private setupKeyboardControls() {
+    window.addEventListener('keydown', (e) => {
+      if (this.keys[e.key]) return; // Prevent repeat
+      this.keys[e.key] = true;
+
+      // Add coins with C key (for testing)
+      if ((e.key === 'c' || e.key === 'C') && !this.pauseMenu.isPausedState()) {
+        this.coinManager.addCoins(10);
+        console.log(`Coins: ${this.coinManager.getCoins()}`);
+        return;
+      }
+
+      // Toggle pause with P or Escape key
+      if (e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && !this.dialogBox.getIsVisible())) {
+        this.pauseMenu.toggle();
+        console.log(`Game ${this.pauseMenu.isPausedState() ? 'paused' : 'resumed'}`);
+        return;
+      }
+
+      // Handle pause menu navigation
+      if (this.pauseMenu.isPausedState()) {
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          this.pauseMenu.moveSelectionUp();
+        } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          this.pauseMenu.moveSelectionDown();
+        } else if (e.key === 'Enter') {
+          this.handleMenuSelection();
+        }
+        return;
+      }
+
+      // Don't process other keys if paused
+      if (this.pauseMenu.isPausedState()) {
+        return;
+      }
+
+      // Interact with nearby NPC using E key
+      if (e.key === 'e' || e.key === 'E') {
+        this.handleInteraction();
+      }
+
+      // Skip dialog with Space or Enter
+      if ((e.key === ' ' || e.key === 'Enter') && this.dialogBox.getIsVisible()) {
+        if (this.dialogBox.getIsComplete()) {
+          this.dialogBox.hide();
+          // Unlock player movement when dialog closes
+          this.player.setMovementLocked(false);
+        } else {
+          this.dialogBox.skip();
+        }
+      }
+
+      // Allow ESC to close dialog
+      if (e.key === 'Escape' && this.dialogBox.getIsVisible()) {
+        this.dialogBox.hide();
+        this.player.setMovementLocked(false);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      this.keys[e.key] = false;
+    });
+  }
+
+  private handleMenuSelection() {
+    const { action, close } = this.pauseMenu.selectOption();
+
+    switch (action) {
+      case 'resume':
+        this.pauseMenu.setPaused(false);
+        break;
+
+      case 'save':
+        this.saveGame();
+        break;
+
+      case 'load':
+        this.loadGame();
+        if (close) {
+          this.pauseMenu.setPaused(false);
+        }
+        break;
+
+      case 'delete':
+        this.deleteSave();
+        break;
+    }
+  }
+
+  private saveGame() {
+    const success = SaveManager.save({
+      playerX: this.player.x,
+      playerY: this.player.y,
+      coins: this.coinManager.getCoins(),
+    });
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Game saved successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to save game');
+    }
+  }
+
+  private loadGame() {
+    const saveData = SaveManager.load();
+
+    if (saveData) {
+      this.player.setPosition(saveData.playerX, saveData.playerY);
+      this.coinManager.setCoins(saveData.coins || 0);
+      this.pauseMenu.showFeedback('✓ Game loaded successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ No save data found');
+    }
+  }
+
+  private deleteSave() {
+    const success = SaveManager.deleteSave();
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Save deleted');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to delete save');
+    }
+  }
+
+  private handleInteraction() {
+    const nearbyNPC = this.npcManager.getNearbyNPC();
+
+    if (nearbyNPC) {
+      if (this.dialogBox.getIsVisible()) {
+        // If dialog is already showing, advance to next line
+        if (this.dialogBox.getIsComplete()) {
+          const nextDialog = nearbyNPC.getNextDialog();
+          this.dialogBox.show(nextDialog);
+        } else {
+          this.dialogBox.skip();
+        }
+      } else {
+        // Start new conversation
+        const dialog = nearbyNPC.getCurrentDialog();
+        this.dialogBox.show(dialog);
+        // Lock player movement when dialog opens
+        this.player.setMovementLocked(true);
+      }
+    }
   }
 
   private loadMapImage() {
@@ -56,11 +282,55 @@ export class Game {
   }
 
   private update(deltaTime: number) {
-    // Update player (but don't let them move off canvas)
-    this.player.update(deltaTime, this.canvas.width, this.canvas.height);
+    // Update pause menu feedback timer
+    this.pauseMenu.update(deltaTime);
+
+    // Update coin animation
+    this.coinManager.update(deltaTime);
+
+    // Don't update game state if paused
+    if (this.pauseMenu.isPausedState()) {
+      return;
+    }
+
+    // Update player and get potential new position
+    const { potentialX, potentialY } = this.player.update(deltaTime);
+
+    // Resolve collision and get validated position
+    const validatedPosition = this.collisionSystem.resolveCollision(
+      this.player.x,
+      this.player.y,
+      potentialX,
+      potentialY,
+      this.player.width,
+      this.player.height
+    );
+
+    // Apply the validated position to the player
+    this.player.applyPosition(validatedPosition.x, validatedPosition.y);
 
     // Update camera to follow player
     this.updateCamera();
+
+    // Update NPCs (check for nearby NPCs)
+    this.npcManager.update(this.player);
+
+    // Update dialog box
+    this.dialogBox.update(deltaTime);
+
+    // Update FPS counter
+    this.updateFPS(deltaTime);
+  }
+
+  private updateFPS(deltaTime: number) {
+    this.frameCount++;
+    this.fpsUpdateTime += deltaTime;
+
+    if (this.fpsUpdateTime >= 1.0) {
+      this.fps = this.frameCount / this.fpsUpdateTime;
+      this.frameCount = 0;
+      this.fpsUpdateTime = 0;
+    }
   }
 
   private updateCamera() {
@@ -80,17 +350,16 @@ export class Game {
 
     // Draw the map portion (if loaded)
     if (this.mapLoaded && this.mapImage) {
-      // Draw only the visible portion of the map
       this.ctx.drawImage(
         this.mapImage,
         this.camera.x,
-        this.camera.y, // Source x, y (what part of image to show)
+        this.camera.y,
         this.canvas.width,
-        this.canvas.height, // Source width, height
+        this.canvas.height,
         0,
-        0, // Destination x, y (where to draw on canvas)
+        0,
         this.canvas.width,
-        this.canvas.height, // Destination width, height
+        this.canvas.height
       );
     } else {
       // Show loading text
@@ -100,11 +369,50 @@ export class Game {
       this.ctx.fillText('Loading map...', this.canvas.width / 2, this.canvas.height / 2);
     }
 
-    // Render player (adjust position relative to camera)
+    // Save context for camera-relative rendering
     this.ctx.save();
     this.ctx.translate(-this.camera.x, -this.camera.y);
+
+    // Render collision boxes in debug mode
+    this.debugRenderer.renderCollisions(this.ctx, this.collisionSystem);
+
+    // Render NPCs
+    this.npcManager.render(this.ctx);
+
+    // Render player
     this.player.render(this.ctx);
+
+    // Render interaction prompts (must be after NPCs and player for proper layering)
+    this.npcManager.renderInteractionPrompts(this.ctx);
+
+    // Render player bounding box in debug mode
+    this.debugRenderer.renderEntityBounds(
+      this.ctx,
+      this.player.x,
+      this.player.y,
+      this.player.width,
+      this.player.height,
+      '#00ff00'
+    );
+
     this.ctx.restore();
+
+    // Render dialog box (always on top, not affected by camera)
+    this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render coin display (top-right corner)
+    this.coinManager.render(this.ctx, this.canvas.width);
+
+    // Render pause menu (must be on top of everything)
+    this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render debug info overlay
+    this.debugRenderer.renderInfo(this.ctx, {
+      player: this.player,
+      camera: this.camera,
+      collisionCount: this.collisionSystem.getCollisionRects().length,
+      fps: this.fps,
+    });
   }
 
   private gameLoop = (currentTime: number) => {
@@ -139,5 +447,25 @@ export class Game {
 
   public getPlayer(): Player {
     return this.player;
+  }
+
+  public getCollisionSystem(): CollisionSystem {
+    return this.collisionSystem;
+  }
+
+  public getDebugRenderer(): DebugRenderer {
+    return this.debugRenderer;
+  }
+
+  public getNPCManager(): NPCManager {
+    return this.npcManager;
+  }
+
+  public getPauseMenu(): PauseMenu {
+    return this.pauseMenu;
+  }
+
+  public getCoinManager(): CoinManager {
+    return this.coinManager;
   }
 }
