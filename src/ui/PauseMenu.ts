@@ -1,4 +1,5 @@
 import { SaveManager } from '../managers/SaveManager';
+import { Colors, Alpha, Fonts, UI } from '../config/theme';
 
 export class PauseMenu {
   private isPaused: boolean = false;
@@ -85,25 +86,25 @@ export class PauseMenu {
     if (!this.isPaused) return;
 
     // Semi-transparent dark overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillStyle = Alpha.overlay;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     ctx.save();
 
     // Draw "PAUSED" title
-    ctx.fillStyle = '#FFE4B5';
-    ctx.font = 'bold 64px Arial';
+    ctx.fillStyle = Colors.moccasin;
+    ctx.font = `bold ${Fonts.sizes.huge} ${Fonts.fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowColor = Alpha.shadowDark;
     ctx.shadowBlur = 10;
     ctx.fillText('PAUSED', canvasWidth / 2, 120);
 
     // Draw save info if exists
     const saveInfo = SaveManager.getSaveInfo();
     if (saveInfo.exists && saveInfo.timeSince) {
-      ctx.font = '18px Arial';
-      ctx.fillStyle = '#D2691E';
+      ctx.font = `18px ${Fonts.fonts.body}`;
+      ctx.fillStyle = Colors.chocolate;
       ctx.shadowBlur = 5;
       ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, 180);
     }
@@ -122,22 +123,22 @@ export class PauseMenu {
 
       // Button background
       if (isDisabled) {
-        ctx.fillStyle = 'rgba(100, 100, 100, 0.5)';
+        ctx.fillStyle = Alpha.grayDisabled;
       } else if (isSelected) {
-        ctx.fillStyle = '#D2691E'; // Chocolate (selected)
+        ctx.fillStyle = Colors.chocolate;
       } else {
-        ctx.fillStyle = '#8B4513'; // Saddle brown
+        ctx.fillStyle = Colors.saddleBrown;
       }
       ctx.fillRect(x, y, this.buttonWidth, this.buttonHeight);
 
       // Button border
-      ctx.strokeStyle = isSelected ? '#FFE4B5' : '#D2691E';
-      ctx.lineWidth = isSelected ? 4 : 2;
+      ctx.strokeStyle = isSelected ? Colors.moccasin : Colors.chocolate;
+      ctx.lineWidth = isSelected ? UI.borderWidth.thick : UI.borderWidth.thin;
       ctx.strokeRect(x, y, this.buttonWidth, this.buttonHeight);
 
       // Button text
-      ctx.fillStyle = isDisabled ? '#666666' : '#FFE4B5';
-      ctx.font = isSelected ? 'bold 28px Arial' : '24px Arial';
+      ctx.fillStyle = isDisabled ? Colors.mediumGray : Colors.moccasin;
+      ctx.font = isSelected ? `bold ${Fonts.sizes.xlarge} ${Fonts.fonts.body}` : `${Fonts.sizes.large} ${Fonts.fonts.body}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(option, canvasWidth / 2, y + this.buttonHeight / 2);
@@ -150,14 +151,14 @@ export class PauseMenu {
       // Fade effect based on timer
       const alpha = Math.min(1, this.feedbackTimer / 0.5);
       ctx.fillStyle = `rgba(255, 228, 181, ${alpha})`;
-      ctx.font = 'bold 22px Arial';
+      ctx.font = `bold 22px ${Fonts.fonts.body}`;
       ctx.textAlign = 'center';
       ctx.fillText(this.feedbackMessage, canvasWidth / 2, feedbackY);
     }
 
     // Draw controls hint
-    ctx.fillStyle = '#999999';
-    ctx.font = '16px Arial';
+    ctx.fillStyle = Colors.lightGray;
+    ctx.font = `16px ${Fonts.fonts.body}`;
     ctx.textAlign = 'center';
     ctx.fillText('Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close', canvasWidth / 2, canvasHeight - 40);
 

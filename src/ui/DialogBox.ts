@@ -1,3 +1,5 @@
+import { Colors, Alpha, Fonts, UI } from '../config/theme';
+
 export class DialogBox {
   private isVisible: boolean = false;
   private fullText: string = '';
@@ -8,15 +10,15 @@ export class DialogBox {
   private isComplete: boolean = false;
 
   // Box styling
-  private padding: number = 20;
+  private padding: number = UI.padding.medium;
   private boxHeight: number = 150;
-  private borderWidth: number = 4;
+  private borderWidth: number = UI.borderWidth.thick;
 
   // Colors
-  private bgColor: string = '#8B4513'; // Saddle brown
-  private borderColor: string = '#D2691E'; // Chocolate
-  private textColor: string = '#FFE4B5'; // Moccasin
-  private shadowColor: string = 'rgba(0, 0, 0, 0.5)';
+  private bgColor: string = Colors.saddleBrown;
+  private borderColor: string = Colors.chocolate;
+  private textColor: string = Colors.moccasin;
+  private shadowColor: string = Alpha.shadow;
 
   public show(text: string) {
     this.isVisible = true;
@@ -82,12 +84,12 @@ export class DialogBox {
       boxX + this.borderWidth,
       boxY + this.borderWidth,
       boxWidth - this.borderWidth * 2,
-      this.boxHeight - this.borderWidth * 2,
+      this.boxHeight - this.borderWidth * 2
     );
 
     // Draw text
     ctx.fillStyle = this.textColor;
-    ctx.font = '20px "Courier New", monospace';
+    ctx.font = `${Fonts.sizes.medium} ${Fonts.monospace}`;
     ctx.textBaseline = 'top';
 
     // Word wrap the text

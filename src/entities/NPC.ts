@@ -1,3 +1,5 @@
+import { Colors } from '../config/theme';
+
 export interface NPCConfig {
   id: string;
   name: string;
@@ -57,16 +59,16 @@ export class NPC {
       ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
     } else {
       // Fallback: Draw a colored rectangle
-      ctx.fillStyle = '#FFA500'; // Orange for NPCs
+      ctx.fillStyle = Colors.orange;
       ctx.fillRect(this.x, this.y, this.width, this.height);
 
-      ctx.strokeStyle = '#FF8C00';
+      ctx.strokeStyle = Colors.darkGold;
       ctx.lineWidth = 2;
       ctx.strokeRect(this.x, this.y, this.width, this.height);
 
       // Draw name label
       ctx.save();
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = Colors.white;
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
@@ -87,12 +89,12 @@ export class NPC {
     ctx.fillRect(promptX - 35, promptY - 15, 70, 20);
 
     // Border
-    ctx.strokeStyle = '#FFE4B5';
+    ctx.strokeStyle = Colors.moccasin;
     ctx.lineWidth = 2;
     ctx.strokeRect(promptX - 35, promptY - 15, 70, 20);
 
     // Text
-    ctx.fillStyle = '#FFE4B5';
+    ctx.fillStyle = Colors.moccasin;
     ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -124,9 +126,6 @@ export class NPC {
     this.currentDialogIndex = 0;
   }
 
-  /**
-   * Check if a point is within interaction range
-   */
   public isInRange(x: number, y: number): boolean {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
@@ -134,14 +133,11 @@ export class NPC {
     return distance <= this.interactionRadius;
   }
 
-  /**
-   * Check if player is in interaction range (using player's center)
-   */
   public canInteractWith(
     playerX: number,
     playerY: number,
     playerWidth: number,
-    playerHeight: number
+    playerHeight: number,
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;

@@ -1,3 +1,5 @@
+import { Colors, Alpha, UI } from '../config/theme';
+
 export class CoinManager {
   private coins: number = 0;
   private animationScale: number = 1;
@@ -66,18 +68,18 @@ export class CoinManager {
 
     // Coin icon background
     const iconSize = 32;
-    const padding = 8;
+    const padding = UI.padding.small;
     const textMetrics = ctx.measureText(this.coins.toString());
     const boxWidth = iconSize + padding * 3 + textMetrics.width + 20;
     const boxHeight = iconSize + padding * 2;
 
     // Background box
-    ctx.fillStyle = 'rgba(139, 69, 19, 0.85)'; // Brown with transparency
+    ctx.fillStyle = Alpha.brownBox;
     ctx.fillRect(x - boxWidth, y, boxWidth, boxHeight);
 
     // Border
-    ctx.strokeStyle = '#D2691E';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = Colors.chocolate;
+    ctx.lineWidth = UI.borderWidth.thin;
     ctx.strokeRect(x - boxWidth, y, boxWidth, boxHeight);
 
     // Apply scale animation
@@ -87,31 +89,31 @@ export class CoinManager {
       ctx.translate(-(x - boxWidth / 2), -(y + boxHeight / 2));
     }
 
-    // Draw coin icon (simple circle for now, can be replaced with sprite)
+    // Draw coin icon
     const coinX = x - boxWidth + padding + iconSize / 2;
     const coinY = y + boxHeight / 2;
 
     // Coin outer circle
-    ctx.fillStyle = '#FFD700'; // Gold
+    ctx.fillStyle = Colors.gold;
     ctx.beginPath();
     ctx.arc(coinX, coinY, iconSize / 2, 0, Math.PI * 2);
     ctx.fill();
 
     // Coin inner circle (for depth)
-    ctx.fillStyle = '#FFA500'; // Orange
+    ctx.fillStyle = Colors.darkGold;
     ctx.beginPath();
     ctx.arc(coinX, coinY, iconSize / 3, 0, Math.PI * 2);
     ctx.fill();
 
     // Coin symbol
-    ctx.fillStyle = '#8B4513'; // Brown
+    ctx.fillStyle = Colors.saddleBrown;
     ctx.font = 'bold 18px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('¢', coinX, coinY);
 
     // Coin count text
-    ctx.fillStyle = '#FFE4B5'; // Moccasin
+    ctx.fillStyle = Colors.moccasin;
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
