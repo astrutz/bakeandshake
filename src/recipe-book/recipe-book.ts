@@ -18,7 +18,9 @@ const DEFAULT_RECIPES: RecipeCard[] = [
     blurb: 'Flaky layers with warm honey glaze.',
     badge: 'Bakery Fav',
     ingredients: ['Butter puff dough', 'Wildflower honey', 'Sea salt'],
-    steps: ['Roll and cut dough', 'Bake until golden', 'Brush with honey glaze'],
+    steps: ['Roll and cut dough',
+      'Bake until golden',
+      'Brush with honey glaze'],
   },
   {
     title: 'Ember Spice Muffin',
@@ -62,6 +64,18 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
   return `
     <div class="recipe-book-panel" role="dialog" aria-modal="true" aria-label="Recipe book overview">
       <div class="recipe-book-content">
+        <div class="recipe-book-close-wrapper">
+          <button
+            class="recipe-book-close"
+            type="button"
+            data-recipe-book-close
+            aria-label="Close book"
+          >
+            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6l-12 12" />
+            </svg>
+          </button>
+        </div>  
         <div class="recipe-book-pages" data-recipe-book-pages>
           <article class="recipe-page recipe-page-cover is-active" data-recipe-page="0">
             <div class="recipe-page-inner recipe-cover-inner">
@@ -69,61 +83,62 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
                 <div class="recipe-cover-title">
                   <strong>Recipes</strong>
                 </div>
-                <div class="pixel-bread" aria-hidden="true"></div>
                 <div class="recipe-cover-subtitle">Bake 'n Shake</div>
+                <div class="recipe-cover-authors">
+                  <span>Alex Strutz</span>
+                  <span>Christin Zieba</span>
+                  <span>Lukas Hülsthorst</span>
+                  <span>Mona Uppenkamp</span>
+                </div>
               </div>
             </div>
           </article>
-          ${recipes
-            .map(
-              (recipe, index) => `
-                <article class="recipe-page" data-recipe-page="${index + 1}">
+          ${ recipes
+    .map(
+      (recipe, index) => `
+                <article class="recipe-page" data-recipe-page="${ index + 1 }">
                   <div class="recipe-page-inner">
                     <div class="recipe-page-header">
                       <div>
-                        <h3>${recipe.title}</h3>
-                        <p>${recipe.blurb}</p>
+                        <h3>${ recipe.title }</h3>
+                        <p>${ recipe.blurb }</p>
                       </div>
-                      <span class="recipe-book-badge">${recipe.badge}</span>
+                      <span class="recipe-book-badge">${ recipe.badge }</span>
                     </div>
                     <div class="recipe-page-meta">
-                      <span>${recipe.time}</span>
-                      <span>${recipe.difficulty}</span>
+                      <span>${ recipe.time }</span>
+                      <span>${ recipe.difficulty }</span>
                     </div>
                     <div class="recipe-page-body">
                       <div class="recipe-page-section">
                         <h4>Ingredients</h4>
                         <ul>
-                          ${recipe.ingredients.map((item) => `<li>${item}</li>`).join('')}
+                          ${ recipe.ingredients.map((item) => `<li>${ item }</li>`).join('') }
                         </ul>
                       </div>
                       <div class="recipe-page-section">
                         <h4>Steps</h4>
                         <ol>
-                          ${recipe.steps.map((step) => `<li>${step}</li>`).join('')}
+                          ${ recipe.steps.map((step) => `<li>${ step }</li>`).join('') }
                         </ol>
                       </div>
                     </div>
                   </div>
                 </article>
               `
-            )
-            .join('')}
+    )
+    .join('') }
         </div>
         <div class="recipe-book-nav">
           <button class="recipe-book-arrow" type="button" data-recipe-book-prev aria-label="Previous page">
-            ‹
+            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
           </button>
           <button class="recipe-book-arrow" type="button" data-recipe-book-next aria-label="Next page">
-            ›
-          </button>
-          <button
-            class="recipe-book-arrow recipe-book-close"
-            type="button"
-            data-recipe-book-close
-            aria-label="Close book"
-          >
-            ✕
+            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </div>
@@ -145,7 +160,6 @@ export function initRecipeBookOverview() {
   document.body.appendChild(overlay);
 
   const closeButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-close]');
-  const panel = overlay.querySelector<HTMLDivElement>('.recipe-book-panel');
   const pages = Array.from(overlay.querySelectorAll<HTMLElement>('[data-recipe-page]'));
   const prevButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-prev]');
   const nextButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-next]');
