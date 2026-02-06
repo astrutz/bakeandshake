@@ -401,7 +401,7 @@ export class Game {
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
+    this.coinManager.render(this.ctx, this.canvas.width);
 
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);

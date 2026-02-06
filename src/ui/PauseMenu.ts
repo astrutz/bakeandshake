@@ -93,7 +93,7 @@ export class PauseMenu {
 
     // Draw "PAUSED" title
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = `bold ${Fonts.sizes.huge} ${Fonts.fonts.body}`;
+    ctx.font = `bold ${Fonts.sizes.huge} ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = Alpha.shadowDark;
@@ -103,7 +103,7 @@ export class PauseMenu {
     // Draw save info if exists
     const saveInfo = SaveManager.getSaveInfo();
     if (saveInfo.exists && saveInfo.timeSince) {
-      ctx.font = `18px ${Fonts.fonts.body}`;
+      ctx.font = `18px ${Fonts.body}`;
       ctx.fillStyle = Colors.chocolate;
       ctx.shadowBlur = 5;
       ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, 180);
@@ -138,7 +138,7 @@ export class PauseMenu {
 
       // Button text
       ctx.fillStyle = isDisabled ? Colors.mediumGray : Colors.moccasin;
-      ctx.font = isSelected ? `bold ${Fonts.sizes.xlarge} ${Fonts.fonts.body}` : `${Fonts.sizes.large} ${Fonts.fonts.body}`;
+      ctx.font = isSelected ? `bold ${Fonts.sizes.xlarge} ${Fonts.body}` : `${Fonts.sizes.large} ${Fonts.body}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(option, canvasWidth / 2, y + this.buttonHeight / 2);
@@ -151,14 +151,14 @@ export class PauseMenu {
       // Fade effect based on timer
       const alpha = Math.min(1, this.feedbackTimer / 0.5);
       ctx.fillStyle = `rgba(255, 228, 181, ${alpha})`;
-      ctx.font = `bold 22px ${Fonts.fonts.body}`;
+      ctx.font = `bold 22px ${Fonts.body}`;
       ctx.textAlign = 'center';
       ctx.fillText(this.feedbackMessage, canvasWidth / 2, feedbackY);
     }
 
     // Draw controls hint
     ctx.fillStyle = Colors.lightGray;
-    ctx.font = `16px ${Fonts.fonts.body}`;
+    ctx.font = `16px ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.fillText('Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close', canvasWidth / 2, canvasHeight - 40);
 
