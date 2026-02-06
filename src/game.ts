@@ -5,6 +5,7 @@ import { CollisionSystem } from './physics/CollisionSystem';
 import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
 import { CoinManager } from './managers/CoinManager';
+import { XPManager } from './managers/XPManager';
 import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
@@ -20,6 +21,7 @@ export class Game {
   private debugRenderer: DebugRenderer;
   private npcManager: NPCManager;
   private coinManager: CoinManager;
+  private xpManager: XPManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -58,14 +60,16 @@ export class Game {
     this.canvas.width = GameConfig.canvas.width;
     this.canvas.height = GameConfig.canvas.height;
 
-    console.log(`Canvas: ${this.canvas.width}×${this.canvas.height} (${GameConfig.canvas.tilesX}×${GameConfig.canvas.tilesY} tiles of ${GameConfig.canvas.tileSize}px)`);
+    console.log(
+      `Canvas: ${this.canvas.width}×${this.canvas.height} (${GameConfig.canvas.tilesX}×${GameConfig.canvas.tilesY} tiles of ${GameConfig.canvas.tileSize}px)`,
+    );
 
     // Initialize player at center of screen (1 tile = 32×32)
     this.player = new Player(
       this.canvas.width / 2 - GameConfig.player.width / 2,
       this.canvas.height / 2 - GameConfig.player.height / 2,
       GameConfig.player.width,
-      GameConfig.player.height
+      GameConfig.player.height,
     );
 
     // Initialize dialog box
@@ -76,6 +80,9 @@ export class Game {
 
     // Initialize coin manager
     this.coinManager = new CoinManager(0);
+
+    // Initialize XP manager with level up callback
+    this.xpManager = new XPManager(0, 1, this.handleLevelUp.bind(this));
 
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
@@ -98,6 +105,22 @@ export class Game {
 
     // Try to auto-load save on startup
     this.tryAutoLoad();
+  }
+
+  private handleLevelUp(level: number, rewards?: { coins?: number; unlocks?: string[] }) {
+    console.log(`🎉 Reached level ${level}!`);
+
+    if (rewards) {
+      if (rewards.coins) {
+        this.coinManager.addCoins(rewards.coins);
+        console.log(`💰 Earned ${rewards.coins} coins!`);
+      }
+
+      if (rewards.unlocks) {
+        console.log(`🔓 Unlocked:`, rewards.unlocks.join(', '));
+        // TODO: Actually unlock features/recipes/etc
+      }
+    }
   }
 
   private tryAutoLoad() {
@@ -140,8 +163,21 @@ export class Game {
         return;
       }
 
+      // Add XP with X key (for testing)
+      if ((e.key === 'x' || e.key === 'X') && !this.pauseMenu.isPausedState()) {
+        this.xpManager.addXP(25);
+        console.log(
+          `XP: ${this.xpManager.getCurrentXP()} | Level: ${this.xpManager.getCurrentLevel()}`,
+        );
+        return;
+      }
+
       // Toggle pause with P or Escape key
-      if (e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && !this.dialogBox.getIsVisible())) {
+      if (
+        e.key === 'p' ||
+        e.key === 'P' ||
+        (e.key === 'Escape' && !this.dialogBox.getIsVisible())
+      ) {
         this.pauseMenu.toggle();
         console.log(`Game ${this.pauseMenu.isPausedState() ? 'paused' : 'resumed'}`);
         return;
@@ -222,6 +258,8 @@ export class Game {
       playerX: this.player.x,
       playerY: this.player.y,
       coins: this.coinManager.getCoins(),
+      xp: this.xpManager.getCurrentXP(),
+      level: this.xpManager.getCurrentLevel(),
     });
 
     if (success) {
@@ -237,6 +275,7 @@ export class Game {
     if (saveData) {
       this.player.setPosition(saveData.playerX, saveData.playerY);
       this.coinManager.setCoins(saveData.coins || 0);
+      this.xpManager.setXP(saveData.xp || 0, saveData.level || 1);
       this.pauseMenu.showFeedback('✓ Game loaded successfully!');
     } else {
       this.pauseMenu.showFeedback('✗ No save data found');
@@ -299,6 +338,9 @@ export class Game {
     // Update coin animation
     this.coinManager.update(deltaTime);
 
+    // Update XP bar animation
+    this.xpManager.update(deltaTime);
+
     // Don't update game state if paused
     if (this.pauseMenu.isPausedState()) {
       return;
@@ -314,7 +356,7 @@ export class Game {
       potentialX,
       potentialY,
       this.player.width,
-      this.player.height
+      this.player.height,
     );
 
     // Apply the validated position to the player
@@ -370,7 +412,7 @@ export class Game {
         0,
         0,
         this.canvas.width,
-        this.canvas.height
+        this.canvas.height,
       );
     } else {
       // Show loading text
@@ -403,16 +445,26 @@ export class Game {
       this.player.y,
       this.player.width,
       this.player.height,
-      '#00ff00'
+      '#00ff00',
     );
 
     this.ctx.restore();
+
+    // Render XP bar (bottom-left corner)
+    this.xpManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render coin display (top-right corner)
     this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Update pause menu with current stats
+    this.pauseMenu.setPlayerStats(
+      this.xpManager.getCurrentLevel(),
+      this.xpManager.getCurrentXP(),
+      this.coinManager.getCoins(),
+    );
 
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
@@ -478,5 +530,9 @@ export class Game {
 
   public getCoinManager(): CoinManager {
     return this.coinManager;
+  }
+
+  public getXPManager(): XPManager {
+    return this.xpManager;
   }
 }
