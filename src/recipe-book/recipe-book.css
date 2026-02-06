@@ -26,6 +26,7 @@
   transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 20;
   font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  user-select: none;
 }
 
 .recipe-book-overlay.is-open {
@@ -229,6 +230,7 @@
   height: auto;
   image-rendering: pixelated;
   filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.2));
+  -webkit-user-drag: none;
 }
 
 .recipe-cover-authors {

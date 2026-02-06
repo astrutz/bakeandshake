@@ -185,14 +185,20 @@ export function initRecipeBookOverview() {
 
   const closeButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-close]');
   const pages = Array.from(overlay.querySelectorAll<HTMLElement>('[data-recipe-page]'));
+  const pagesRoot = overlay.querySelector<HTMLDivElement>('[data-recipe-book-pages]');
   const prevButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-prev]');
   const nextButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-next]');
 
   let currentIndex = 0;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragTarget: HTMLElement | null = null;
+  let dragDirection: 'next' | 'prev' | null = null;
 
   const updatePages = () => {
     pages.forEach((page, index) => {
       page.style.zIndex = String(pages.length - index);
+      page.style.transform = '';
       if (index < currentIndex) {
         page.classList.add('is-flipped');
         page.classList.remove('is-active');
@@ -250,5 +256,70 @@ export function initRecipeBookOverview() {
       currentIndex += 1;
       updatePages();
     }
+  });
+
+  pagesRoot?.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    if ((event.target as HTMLElement | null)?.closest('button')) return;
+    const page = pages[currentIndex];
+    if (!page) return;
+    isDragging = true;
+    dragStartX = event.clientX;
+    dragTarget = page;
+    dragDirection = null;
+    pagesRoot.setPointerCapture(event.pointerId);
+  });
+
+  pagesRoot?.addEventListener('pointermove', (event) => {
+    if (!isDragging || !dragTarget || !pagesRoot) return;
+    const rect = pagesRoot.getBoundingClientRect();
+    const deltaX = event.clientX - dragStartX;
+    const progress = Math.max(-1, Math.min(1, deltaX / rect.width));
+
+    if (progress < 0) {
+      if (currentIndex >= pages.length - 1) {
+        dragDirection = null;
+        dragTarget.style.transform = '';
+        return;
+      }
+      dragDirection = 'next';
+      const rotation = Math.max(-180, progress * 180);
+      dragTarget.style.transform = `rotateY(${rotation}deg)`;
+    } else if (progress > 0 && currentIndex > 0) {
+      dragDirection = 'prev';
+      const prevPage = pages[currentIndex - 1];
+      dragTarget = prevPage;
+      const rotation = -180 + progress * 180;
+      prevPage.style.transform = `rotateY(${Math.min(0, rotation)}deg)`;
+    } else {
+      dragDirection = null;
+    }
+  });
+
+  pagesRoot?.addEventListener('pointerup', (event) => {
+    if (!isDragging) return;
+    isDragging = false;
+    pagesRoot.releasePointerCapture(event.pointerId);
+    const deltaX = event.clientX - dragStartX;
+    const rect = pagesRoot.getBoundingClientRect();
+    const progress = deltaX / rect.width;
+
+    if (dragDirection === 'next' && progress < -0.3 && currentIndex < pages.length - 1) {
+      currentIndex += 1;
+    } else if (dragDirection === 'prev' && progress > 0.3 && currentIndex > 0) {
+      currentIndex -= 1;
+    }
+
+    dragTarget = null;
+    dragDirection = null;
+    updatePages();
+  });
+
+  pagesRoot?.addEventListener('pointercancel', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    dragTarget = null;
+    dragDirection = null;
+    updatePages();
   });
 }
