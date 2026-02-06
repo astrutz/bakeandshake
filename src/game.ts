@@ -1,9 +1,11 @@
 import { Player } from './entities/Player';
+import { DialogBox } from './ui/DialogBox';
 
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
+  private dialogBox: DialogBox;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -16,8 +18,11 @@ export class Game {
   // Background map image
   private mapImage: HTMLImageElement | null = null;
   private mapLoaded: boolean = false;
-  private mapWidth: number = 2000; // Will be updated when image loads
-  private mapHeight: number = 1500; // Will be updated when image loads
+  private mapWidth: number = 2000;
+  private mapHeight: number = 1500;
+
+  // Keyboard controls for dialog
+  private keys: { [key: string]: boolean } = {};
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -34,8 +39,41 @@ export class Game {
     // Initialize player at center of screen
     this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
 
+    // Initialize dialog box
+    this.dialogBox = new DialogBox();
+
     // Load the background map image
     this.loadMapImage();
+
+    // Setup keyboard controls for dialog
+    this.setupKeyboardControls();
+  }
+
+  private setupKeyboardControls() {
+    window.addEventListener('keydown', (e) => {
+      if (this.keys[e.key]) return; // Prevent repeat
+      this.keys[e.key] = true;
+
+      // Todo: Extract
+      if (e.key === 'l' || e.key === 'L') {
+        this.dialogBox.toggle(
+          "Welcome to Bake 'n Shake! I'm here to serve you the finest pastries in town. Would you like to try our special croissant today? It's freshly baked and absolutely delicious!",
+        );
+      }
+
+      // Skip dialog with Space or Enter
+      if ((e.key === ' ' || e.key === 'Enter') && this.dialogBox.getIsVisible()) {
+        if (this.dialogBox.getIsComplete()) {
+          this.dialogBox.hide();
+        } else {
+          this.dialogBox.skip();
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      this.keys[e.key] = false;
+    });
   }
 
   private loadMapImage() {
@@ -61,6 +99,9 @@ export class Game {
 
     // Update camera to follow player
     this.updateCamera();
+
+    // Update dialog box
+    this.dialogBox.update(deltaTime);
   }
 
   private updateCamera() {
@@ -80,17 +121,16 @@ export class Game {
 
     // Draw the map portion (if loaded)
     if (this.mapLoaded && this.mapImage) {
-      // Draw only the visible portion of the map
       this.ctx.drawImage(
         this.mapImage,
         this.camera.x,
-        this.camera.y, // Source x, y (what part of image to show)
+        this.camera.y,
         this.canvas.width,
-        this.canvas.height, // Source width, height
+        this.canvas.height,
         0,
-        0, // Destination x, y (where to draw on canvas)
+        0,
         this.canvas.width,
-        this.canvas.height, // Destination width, height
+        this.canvas.height,
       );
     } else {
       // Show loading text
@@ -105,6 +145,9 @@ export class Game {
     this.ctx.translate(-this.camera.x, -this.camera.y);
     this.player.render(this.ctx);
     this.ctx.restore();
+
+    // Render dialog box (always on top, not affected by camera)
+    this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
   }
 
   private gameLoop = (currentTime: number) => {

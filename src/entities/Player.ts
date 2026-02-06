@@ -30,7 +30,6 @@ export class Player {
     this.sprite = new Image();
     this.sprite.onload = () => {
       this.spriteLoaded = true;
-      console.log('Player sprite loaded');
     };
     this.sprite.onerror = () => {
       console.error('Failed to load player sprite');
@@ -81,21 +80,7 @@ export class Player {
   public render(ctx: CanvasRenderingContext2D) {
     if (this.spriteLoaded && this.sprite) {
       // Draw the sprite image scaled to width x height
-      ctx.drawImage(
-        this.sprite,
-        this.x,
-        this.y,
-        this.width,
-        this.height
-      );
-    } else {
-      // Fallback: Draw rectangle if sprite not loaded
-      ctx.fillStyle = '#646cff';
-      ctx.fillRect(this.x, this.y, this.width, this.height);
-
-      ctx.strokeStyle = '#535bf2';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(this.x, this.y, this.width, this.height);
+      ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
     }
   }
 
