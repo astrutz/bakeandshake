@@ -2,6 +2,8 @@ export interface SaveData {
   playerX: number;
   playerY: number;
   coins: number;
+  xp: number;
+  level: number;
   timestamp: number;
   version: string;
 }

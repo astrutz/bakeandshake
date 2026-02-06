@@ -16,6 +16,11 @@ export class PauseMenu {
   private buttonHeight: number = 70; // Was 60
   private buttonSpacing: number = 24; // Was 20
 
+  // Player stats (injected from Game)
+  private playerLevel: number = 1;
+  private playerXP: number = 0;
+  private playerCoins: number = 0;
+
   constructor() {}
 
   public setPaused(paused: boolean) {
@@ -50,7 +55,8 @@ export class PauseMenu {
 
   public moveSelectionUp() {
     if (!this.isPaused) return;
-    this.selectedOption = (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+    this.selectedOption =
+      (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
   }
 
   public moveSelectionDown() {
@@ -82,6 +88,12 @@ export class PauseMenu {
     this.feedbackTimer = this.FEEDBACK_DURATION;
   }
 
+  public setPlayerStats(level: number, xp: number, coins: number) {
+    this.playerLevel = level;
+    this.playerXP = xp;
+    this.playerCoins = coins;
+  }
+
   public render(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) {
     if (!this.isPaused) return;
 
@@ -98,21 +110,35 @@ export class PauseMenu {
     ctx.textBaseline = 'middle';
     ctx.shadowColor = Alpha.shadowDark;
     ctx.shadowBlur = 10;
-    ctx.fillText('PAUSED', canvasWidth / 2, 140); // Was 120
+    ctx.fillText('PAUSED', canvasWidth / 2, 140);
+
+    // Draw player stats
+    const statsY = 220;
+    ctx.font = `${Fonts.sizes.medium} ${Fonts.body}`;
+    ctx.fillStyle = Colors.wheat;
+    ctx.shadowBlur = 5;
+    ctx.fillText(
+      `Level ${this.playerLevel} • ${this.playerXP} XP • ${this.playerCoins} Coins`,
+      canvasWidth / 2,
+      statsY,
+    );
 
     // Draw save info if exists
     const saveInfo = SaveManager.getSaveInfo();
     if (saveInfo.exists && saveInfo.timeSince) {
-      ctx.font = `${Fonts.sizes.medium} ${Fonts.body}`; // Was 18px, now 22px
+      ctx.font = `${Fonts.sizes.small} ${Fonts.body}`;
       ctx.fillStyle = Colors.chocolate;
       ctx.shadowBlur = 5;
-      ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, 200); // Was 180
+      ctx.fillText(`Last save: ${saveInfo.timeSince}`, canvasWidth / 2, statsY + 35);
     }
 
     ctx.shadowBlur = 0;
 
     // Calculate menu position
-    const startY = canvasHeight / 2 - ((this.menuOptions.length * (this.buttonHeight + this.buttonSpacing)) / 2);
+    const startY =
+      canvasHeight / 2 -
+      (this.menuOptions.length * (this.buttonHeight + this.buttonSpacing)) / 2 +
+      40;
 
     // Draw menu buttons
     this.menuOptions.forEach((option, index) => {
@@ -148,12 +174,13 @@ export class PauseMenu {
 
     // Draw feedback message
     if (this.feedbackMessage) {
-      const feedbackY = startY + this.menuOptions.length * (this.buttonHeight + this.buttonSpacing) + 48; // Was 40
+      const feedbackY =
+        startY + this.menuOptions.length * (this.buttonHeight + this.buttonSpacing) + 48;
 
       // Fade effect based on timer
       const alpha = Math.min(1, this.feedbackTimer / 0.5);
       ctx.fillStyle = `rgba(255, 228, 181, ${alpha})`;
-      ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`; // Was 22px, now 28px
+      ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(this.feedbackMessage, canvasWidth / 2, feedbackY);
@@ -161,10 +188,14 @@ export class PauseMenu {
 
     // Draw controls hint
     ctx.fillStyle = Colors.lightGray;
-    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was 16px, now 18px
+    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close', canvasWidth / 2, canvasHeight - 48); // Was 40
+    ctx.fillText(
+      'Use ↑↓ or W/S to navigate, Enter to select, P or ESC to close',
+      canvasWidth / 2,
+      canvasHeight - 48,
+    );
 
     ctx.restore();
   }
