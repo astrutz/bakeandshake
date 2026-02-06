@@ -1,16 +1,23 @@
+import { Player } from './entities/Player';
+
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private rect: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    velocityX: number;
-    velocityY: number;
-  };
+  private player: Player;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
+
+  // Camera/viewport for the map
+  private camera = {
+    x: 0,
+    y: 0,
+  };
+
+  // Background map image
+  private mapImage: HTMLImageElement | null = null;
+  private mapLoaded: boolean = false;
+  private mapWidth: number = 2000; // Will be updated when image loads
+  private mapHeight: number = 1500; // Will be updated when image loads
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,38 +27,50 @@ export class Game {
     }
     this.ctx = context;
 
-    this.rect = {
-      x: 100,
-      y: 100,
-      width: 50,
-      height: 50,
-      velocityX: 100, // pixels per second
-      velocityY: 80, // pixels per second
-    };
+    // Set fixed canvas resolution for pixel art
+    this.canvas.width = 1200;
+    this.canvas.height = 900;
 
-    this.resizeCanvas();
-    window.addEventListener('resize', () => this.resizeCanvas());
+    // Initialize player at center of screen
+    this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
+
+    // Load the background map image
+    this.loadMapImage();
   }
 
-  private resizeCanvas() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+  private loadMapImage() {
+    this.mapImage = new Image();
+    this.mapImage.onload = () => {
+      this.mapLoaded = true;
+      if (this.mapImage) {
+        this.mapWidth = this.mapImage.width;
+        this.mapHeight = this.mapImage.height;
+        console.log(`Map loaded: ${this.mapWidth}x${this.mapHeight}`);
+      }
+    };
+    this.mapImage.onerror = () => {
+      console.error('Failed to load map image');
+      this.mapLoaded = false;
+    };
+    this.mapImage.src = '/test.jpg';
   }
 
   private update(deltaTime: number) {
-    // Update rectangle position
-    this.rect.x += this.rect.velocityX * deltaTime;
-    this.rect.y += this.rect.velocityY * deltaTime;
+    // Update player (but don't let them move off canvas)
+    this.player.update(deltaTime, this.canvas.width, this.canvas.height);
 
-    // Bounce off walls
-    if (this.rect.x + this.rect.width > this.canvas.width || this.rect.x < 0) {
-      this.rect.velocityX *= -1;
-      this.rect.x = Math.max(0, Math.min(this.rect.x, this.canvas.width - this.rect.width));
-    }
-    if (this.rect.y + this.rect.height > this.canvas.height || this.rect.y < 0) {
-      this.rect.velocityY *= -1;
-      this.rect.y = Math.max(0, Math.min(this.rect.y, this.canvas.height - this.rect.height));
-    }
+    // Update camera to follow player
+    this.updateCamera();
+  }
+
+  private updateCamera() {
+    // Center camera on player
+    this.camera.x = this.player.x + this.player.width / 2 - this.canvas.width / 2;
+    this.camera.y = this.player.y + this.player.height / 2 - this.canvas.height / 2;
+
+    // Clamp camera to map boundaries
+    this.camera.x = Math.max(0, Math.min(this.camera.x, this.mapWidth - this.canvas.width));
+    this.camera.y = Math.max(0, Math.min(this.camera.y, this.mapHeight - this.canvas.height));
   }
 
   private render() {
@@ -59,14 +78,33 @@ export class Game {
     this.ctx.fillStyle = '#1a1a1a';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw rectangle
-    this.ctx.fillStyle = '#646cff';
-    this.ctx.fillRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+    // Draw the map portion (if loaded)
+    if (this.mapLoaded && this.mapImage) {
+      // Draw only the visible portion of the map
+      this.ctx.drawImage(
+        this.mapImage,
+        this.camera.x,
+        this.camera.y, // Source x, y (what part of image to show)
+        this.canvas.width,
+        this.canvas.height, // Source width, height
+        0,
+        0, // Destination x, y (where to draw on canvas)
+        this.canvas.width,
+        this.canvas.height, // Destination width, height
+      );
+    } else {
+      // Show loading text
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = '24px Arial';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText('Loading map...', this.canvas.width / 2, this.canvas.height / 2);
+    }
 
-    // Optional: Draw a border
-    this.ctx.strokeStyle = '#535bf2';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
+    // Render player (adjust position relative to camera)
+    this.ctx.save();
+    this.ctx.translate(-this.camera.x, -this.camera.y);
+    this.player.render(this.ctx);
+    this.ctx.restore();
   }
 
   private gameLoop = (currentTime: number) => {
@@ -97,5 +135,9 @@ export class Game {
       this.animationFrameId = null;
       this.lastTime = 0;
     }
+  }
+
+  public getPlayer(): Player {
+    return this.player;
   }
 }
