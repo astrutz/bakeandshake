@@ -1,8 +1,11 @@
 import { Player } from './entities/Player';
 import { DialogBox } from './ui/DialogBox';
+import { PauseMenu } from './ui/PauseMenu';
 import { CollisionSystem } from './physics/CollisionSystem';
 import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
+import { CoinManager } from './managers/CoinManager';
+import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
 
@@ -11,9 +14,11 @@ export class Game {
   private ctx: CanvasRenderingContext2D;
   private player: Player;
   private dialogBox: DialogBox;
+  private pauseMenu: PauseMenu;
   private collisionSystem: CollisionSystem;
   private debugRenderer: DebugRenderer;
   private npcManager: NPCManager;
+  private coinManager: CoinManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -55,6 +60,12 @@ export class Game {
     // Initialize dialog box
     this.dialogBox = new DialogBox();
 
+    // Initialize pause menu
+    this.pauseMenu = new PauseMenu();
+
+    // Initialize coin manager
+    this.coinManager = new CoinManager(0);
+
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
 
@@ -73,6 +84,15 @@ export class Game {
 
     // Setup keyboard controls for dialog
     this.setupKeyboardControls();
+
+    // Try to auto-load save on startup
+    this.tryAutoLoad();
+  }
+
+  private tryAutoLoad() {
+    if (SaveManager.hasSave()) {
+      console.log('Save file detected. Press "Load Game" in pause menu to continue.');
+    }
   }
 
   private loadNPCs() {
@@ -102,6 +122,37 @@ export class Game {
       if (this.keys[e.key]) return; // Prevent repeat
       this.keys[e.key] = true;
 
+      // Add coins with C key (for testing)
+      if ((e.key === 'c' || e.key === 'C') && !this.pauseMenu.isPausedState()) {
+        this.coinManager.addCoins(10);
+        console.log(`Coins: ${this.coinManager.getCoins()}`);
+        return;
+      }
+
+      // Toggle pause with P or Escape key
+      if (e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && !this.dialogBox.getIsVisible())) {
+        this.pauseMenu.toggle();
+        console.log(`Game ${this.pauseMenu.isPausedState() ? 'paused' : 'resumed'}`);
+        return;
+      }
+
+      // Handle pause menu navigation
+      if (this.pauseMenu.isPausedState()) {
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          this.pauseMenu.moveSelectionUp();
+        } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          this.pauseMenu.moveSelectionDown();
+        } else if (e.key === 'Enter') {
+          this.handleMenuSelection();
+        }
+        return;
+      }
+
+      // Don't process other keys if paused
+      if (this.pauseMenu.isPausedState()) {
+        return;
+      }
+
       // Interact with nearby NPC using E key
       if (e.key === 'e' || e.key === 'E') {
         this.handleInteraction();
@@ -128,6 +179,67 @@ export class Game {
     window.addEventListener('keyup', (e) => {
       this.keys[e.key] = false;
     });
+  }
+
+  private handleMenuSelection() {
+    const { action, close } = this.pauseMenu.selectOption();
+
+    switch (action) {
+      case 'resume':
+        this.pauseMenu.setPaused(false);
+        break;
+
+      case 'save':
+        this.saveGame();
+        break;
+
+      case 'load':
+        this.loadGame();
+        if (close) {
+          this.pauseMenu.setPaused(false);
+        }
+        break;
+
+      case 'delete':
+        this.deleteSave();
+        break;
+    }
+  }
+
+  private saveGame() {
+    const success = SaveManager.save({
+      playerX: this.player.x,
+      playerY: this.player.y,
+      coins: this.coinManager.getCoins(),
+    });
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Game saved successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to save game');
+    }
+  }
+
+  private loadGame() {
+    const saveData = SaveManager.load();
+
+    if (saveData) {
+      this.player.setPosition(saveData.playerX, saveData.playerY);
+      this.coinManager.setCoins(saveData.coins || 0);
+      this.pauseMenu.showFeedback('✓ Game loaded successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ No save data found');
+    }
+  }
+
+  private deleteSave() {
+    const success = SaveManager.deleteSave();
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Save deleted');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to delete save');
+    }
   }
 
   private handleInteraction() {
@@ -170,6 +282,17 @@ export class Game {
   }
 
   private update(deltaTime: number) {
+    // Update pause menu feedback timer
+    this.pauseMenu.update(deltaTime);
+
+    // Update coin animation
+    this.coinManager.update(deltaTime);
+
+    // Don't update game state if paused
+    if (this.pauseMenu.isPausedState()) {
+      return;
+    }
+
     // Update player and get potential new position
     const { potentialX, potentialY } = this.player.update(deltaTime);
 
@@ -180,7 +303,7 @@ export class Game {
       potentialX,
       potentialY,
       this.player.width,
-      this.player.height,
+      this.player.height
     );
 
     // Apply the validated position to the player
@@ -236,7 +359,7 @@ export class Game {
         0,
         0,
         this.canvas.width,
-        this.canvas.height,
+        this.canvas.height
       );
     } else {
       // Show loading text
@@ -269,13 +392,19 @@ export class Game {
       this.player.y,
       this.player.width,
       this.player.height,
-      '#00ff00',
+      '#00ff00'
     );
 
     this.ctx.restore();
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render coin display (top-right corner)
+    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render pause menu (must be on top of everything)
+    this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render debug info overlay
     this.debugRenderer.renderInfo(this.ctx, {
@@ -330,5 +459,13 @@ export class Game {
 
   public getNPCManager(): NPCManager {
     return this.npcManager;
+  }
+
+  public getPauseMenu(): PauseMenu {
+    return this.pauseMenu;
+  }
+
+  public getCoinManager(): CoinManager {
+    return this.coinManager;
   }
 }
