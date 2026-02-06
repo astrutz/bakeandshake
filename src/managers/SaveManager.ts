@@ -1,6 +1,7 @@
 export interface SaveData {
   playerX: number;
   playerY: number;
+  coins: number;
   timestamp: number;
   version: string;
 }
