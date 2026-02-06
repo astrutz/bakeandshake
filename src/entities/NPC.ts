@@ -65,17 +65,22 @@ export class NPC {
       ctx.strokeRect(this.x, this.y, this.width, this.height);
 
       // Draw name label
+      ctx.save();
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
       ctx.fillText(this.name, this.x + this.width / 2, this.y - 5);
+      ctx.restore();
     }
   }
 
   public renderInteractionPrompt(ctx: CanvasRenderingContext2D) {
+    ctx.save();
+
     // Draw "Press E" prompt above NPC
     const promptX = this.x + this.width / 2;
-    const promptY = this.y - 15;
+    const promptY = this.y - 30;
 
     // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -90,7 +95,10 @@ export class NPC {
     ctx.fillStyle = '#FFE4B5';
     ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('Press E', promptX, promptY);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Press E', promptX, promptY - 5);
+
+    ctx.restore();
   }
 
   public getCollisionBox() {
@@ -133,7 +141,7 @@ export class NPC {
     playerX: number,
     playerY: number,
     playerWidth: number,
-    playerHeight: number,
+    playerHeight: number
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;

@@ -103,10 +103,11 @@ export class DialogBox {
     });
 
     // Draw blinking cursor if still typing
-    if (!this.isComplete) {
-      const lastLine = lines[lines.length - 1] || '';
+    if (!this.isComplete && this.displayedText.length > 0) {
+      const lastLineIndex = Math.max(0, lines.length - 1);
+      const lastLine = lines[lastLineIndex] || '';
       const cursorX = textX + ctx.measureText(lastLine).width + 4;
-      const cursorY = textY + (lines.length - 1) * lineHeight;
+      const cursorY = textY + lastLineIndex * lineHeight;
 
       // Blink effect
       if (Math.floor(Date.now() / 500) % 2 === 0) {
@@ -117,6 +118,8 @@ export class DialogBox {
   }
 
   private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+    if (text === '') return [];
+
     const words = text.split(' ');
     const lines: string[] = [];
     let currentLine = '';
