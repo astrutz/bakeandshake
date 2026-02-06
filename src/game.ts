@@ -115,9 +115,18 @@ export class Game {
         if (this.dialogBox.getIsComplete()) {
           this.dialogBox.hide();
           this.currentInteractingNPC = null;
+          // Unlock player movement when dialog closes
+          this.player.setMovementLocked(false);
         } else {
           this.dialogBox.skip();
         }
+      }
+
+      // Allow ESC to close dialog
+      if (e.key === 'Escape' && this.dialogBox.getIsVisible()) {
+        this.dialogBox.hide();
+        this.currentInteractingNPC = null;
+        this.player.setMovementLocked(false);
       }
     });
 
@@ -144,6 +153,8 @@ export class Game {
         const dialog = nearbyNPC.getCurrentDialog();
         this.dialogBox.show(dialog);
         this.currentInteractingNPC = nearbyNPC.id;
+        // Lock player movement when dialog opens
+        this.player.setMovementLocked(true);
       }
     }
   }
