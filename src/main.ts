@@ -1,33 +1,30 @@
 import './style.css';
 import { Game } from './game';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <h1>Bake 'n Shake</h1>
-    <canvas id="gameCanvas"></canvas>
-    <div class="controls">
-      <button id="startBtn">Start Game</button>
-      <button id="stopBtn">Stop Game</button>
-    </div>
-  </div>
-`;
-
-const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas');
+// Get the existing canvas element
+const canvas = document.querySelector<HTMLCanvasElement>('#game');
 if (!canvas) {
   throw new Error('Canvas element not found');
 }
 
+// Initialize the game
 const game = new Game(canvas);
 
-const startBtn = document.querySelector<HTMLButtonElement>('#startBtn');
-const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn');
+// Set up controls
+const toggleBtn = document.querySelector<HTMLButtonElement>('#toggle');
 
-startBtn?.addEventListener('click', () => {
-  game.start();
+let isRunning = true;
+
+toggleBtn?.addEventListener('click', () => {
+  if (isRunning) {
+    game.stop();
+    toggleBtn.textContent = 'Resume';
+  } else {
+    game.start();
+    toggleBtn.textContent = 'Pause';
+  }
+  isRunning = !isRunning;
 });
 
-stopBtn?.addEventListener('click', () => {
-  game.stop();
-});
-
+// Auto-start the game
 game.start();
