@@ -37,9 +37,6 @@ export class Game {
   private frameCount: number = 0;
   private fpsUpdateTime: number = 0;
 
-  // Interaction state
-  private currentInteractingNPC: string | null = null;
-
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const context = canvas.getContext('2d');
@@ -114,7 +111,6 @@ export class Game {
       if ((e.key === ' ' || e.key === 'Enter') && this.dialogBox.getIsVisible()) {
         if (this.dialogBox.getIsComplete()) {
           this.dialogBox.hide();
-          this.currentInteractingNPC = null;
           // Unlock player movement when dialog closes
           this.player.setMovementLocked(false);
         } else {
@@ -125,7 +121,6 @@ export class Game {
       // Allow ESC to close dialog
       if (e.key === 'Escape' && this.dialogBox.getIsVisible()) {
         this.dialogBox.hide();
-        this.currentInteractingNPC = null;
         this.player.setMovementLocked(false);
       }
     });
@@ -144,7 +139,6 @@ export class Game {
         if (this.dialogBox.getIsComplete()) {
           const nextDialog = nearbyNPC.getNextDialog();
           this.dialogBox.show(nextDialog);
-          this.currentInteractingNPC = nearbyNPC.id;
         } else {
           this.dialogBox.skip();
         }
@@ -152,7 +146,6 @@ export class Game {
         // Start new conversation
         const dialog = nearbyNPC.getCurrentDialog();
         this.dialogBox.show(dialog);
-        this.currentInteractingNPC = nearbyNPC.id;
         // Lock player movement when dialog opens
         this.player.setMovementLocked(true);
       }
@@ -178,11 +171,7 @@ export class Game {
 
   private update(deltaTime: number) {
     // Update player and get potential new position
-    const { potentialX, potentialY } = this.player.update(
-      deltaTime,
-      this.canvas.width,
-      this.canvas.height,
-    );
+    const { potentialX, potentialY } = this.player.update(deltaTime);
 
     // Resolve collision and get validated position
     const validatedPosition = this.collisionSystem.resolveCollision(

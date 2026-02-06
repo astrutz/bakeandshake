@@ -52,7 +52,7 @@ export class Player {
     });
   }
 
-  public update(deltaTime: number, canvasWidth: number, canvasHeight: number) {
+  public update(deltaTime: number) {
     // Handle keyboard input
     this.velocityX = 0;
     this.velocityY = 0;
