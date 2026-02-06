@@ -12,51 +12,25 @@ type RecipeCard = {
 
 const DEFAULT_RECIPES: RecipeCard[] = [
   {
-    title: 'Honey Crust Croissant',
-    time: '12 min',
-    difficulty: 'Easy',
-    blurb: 'Flaky layers with warm honey glaze.',
-    badge: 'Bakery Fav',
-    ingredients: ['Butter puff dough', 'Wildflower honey', 'Sea salt'],
-    steps: ['Roll and cut dough',
-      'Bake until golden',
-      'Brush with honey glaze'],
-  },
-  {
-    title: 'Ember Spice Muffin',
-    time: '18 min',
-    difficulty: 'Medium',
-    blurb: 'Cinnamon, clove, and roasted sugar.',
-    badge: 'New',
-    ingredients: ['Spiced batter', 'Brown sugar', 'Clove crumble'],
-    steps: ['Mix batter', 'Top with crumble', 'Bake and cool'],
-  },
-  {
-    title: 'Shakehouse Sundae',
-    time: '8 min',
-    difficulty: 'Easy',
-    blurb: 'Vanilla bean with candied crumbs.',
-    badge: 'Fast',
-    ingredients: ['Vanilla cream', 'Caramel crumbs', 'Toasted nuts'],
-    steps: ['Scoop base', 'Add crumbs', 'Finish with nuts'],
-  },
-  {
-    title: 'Midnight Rye Loaf',
-    time: '25 min',
-    difficulty: 'Hard',
-    blurb: 'Deep caramel notes, slow-rise crust.',
-    badge: 'Unlock Lv. 6',
-    ingredients: ['Rye starter', 'Dark flour', 'Molasses'],
-    steps: ['Feed starter', 'Slow rise dough', 'Bake in cast iron'],
-  },
-  {
-    title: 'Citrus Glaze Tart',
-    time: '15 min',
-    difficulty: 'Medium',
-    blurb: 'Zesty custard with a crisp shell.',
-    badge: 'Seasonal',
-    ingredients: ['Shortcrust base', 'Citrus zest', 'Cream custard'],
-    steps: ['Blind bake shell', 'Cook custard', 'Chill and glaze'],
+    title: 'Einfaches Brot backen',
+    time: '1 h 5 min',
+    difficulty: 'Beginner',
+    blurb: 'Ein sehr einfaches Brot mit Übernachtgare und knuspriger Kruste.',
+    badge: 'Mona Core',
+    ingredients: [
+      '10 g frische Hefe',
+      '450 g lauwarmes Wasser',
+      '600 g Dinkelmehl (Type 630)',
+      '15 g Salz',
+      '10 g Zucker',
+    ],
+    steps: [
+      'Hefe im lauwarmen Wasser auflösen, dann alle Zutaten kurz mit einem Löffel verrühren (nicht kneten).',
+      'Teig abgedeckt 8–12 Stunden im Kühlschrank reifen lassen.',
+      'Topf (Gusseisen oder ofenfest) im Ofen auf 250 °C Ober-/Unterhitze vorheizen.',
+      'Teig auf bemehltes Backpapier stürzen, über die Seiten falten und mit Papier in den heißen Topf setzen.',
+      '30 Minuten mit Deckel backen, dann auf 200 °C reduzieren und weitere 20 Minuten ohne Deckel backen.',
+    ],
   },
 ];
 
@@ -80,10 +54,13 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
           <article class="recipe-page recipe-page-cover is-active" data-recipe-page="0">
             <div class="recipe-page-inner recipe-cover-inner">
               <div class="recipe-cover-frame">
+              <div>
                 <div class="recipe-cover-title">
                   <strong>Recipes</strong>
                 </div>
                 <div class="recipe-cover-subtitle">Bake 'n Shake</div>
+                </div>
+                <img class="recipe-cover-icon" src="/croissant.png" alt="Croissant" />
                 <div class="recipe-cover-authors">
                   <span>Alex Strutz</span>
                   <span>Christin Zieba</span>
@@ -93,41 +70,41 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
               </div>
             </div>
           </article>
-          ${ recipes
-    .map(
-      (recipe, index) => `
-                <article class="recipe-page" data-recipe-page="${ index + 1 }">
+          ${recipes
+            .map(
+              (recipe, index) => `
+                <article class="recipe-page" data-recipe-page="${index + 1}">
                   <div class="recipe-page-inner">
                     <div class="recipe-page-header">
                       <div>
-                        <h3>${ recipe.title }</h3>
-                        <p>${ recipe.blurb }</p>
+                        <h3>${recipe.title}</h3>
+                        <p>${recipe.blurb}</p>
                       </div>
-                      <span class="recipe-book-badge">${ recipe.badge }</span>
+                      <span class="recipe-book-badge">${recipe.badge}</span>
                     </div>
                     <div class="recipe-page-meta">
-                      <span>${ recipe.time }</span>
-                      <span>${ recipe.difficulty }</span>
+                      <span>${recipe.time}</span>
+                      <span>${recipe.difficulty}</span>
                     </div>
                     <div class="recipe-page-body">
                       <div class="recipe-page-section">
                         <h4>Ingredients</h4>
                         <ul>
-                          ${ recipe.ingredients.map((item) => `<li>${ item }</li>`).join('') }
+                          ${recipe.ingredients.map((item) => `<li>${item}</li>`).join('')}
                         </ul>
                       </div>
                       <div class="recipe-page-section">
                         <h4>Steps</h4>
                         <ol>
-                          ${ recipe.steps.map((step) => `<li>${ step }</li>`).join('') }
+                          ${recipe.steps.map((step) => `<li>${step}</li>`).join('')}
                         </ol>
                       </div>
                     </div>
                   </div>
                 </article>
-              `
-    )
-    .join('') }
+              `,
+            )
+            .join('')}
         </div>
         <div class="recipe-book-nav">
           <button class="recipe-book-arrow" type="button" data-recipe-book-prev aria-label="Previous page">

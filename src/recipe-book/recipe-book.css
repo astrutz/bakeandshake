@@ -13,8 +13,9 @@
 .recipe-book-overlay {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background:
     radial-gradient(900px 500px at 20% 10%, rgba(255, 205, 140, 0.18), transparent 60%),
     radial-gradient(700px 420px at 80% 0%, rgba(117, 84, 57, 0.25), transparent 55%),
@@ -46,7 +47,8 @@
   border-radius: 0;
   box-shadow: none;
   padding: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   overflow: visible;
   position: relative;
@@ -64,10 +66,11 @@
 }
 
 .recipe-book-content {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
   overflow: hidden;
-  justify-items: center;
+  align-items: center;
   position: relative;
   padding: 20px;
 }
@@ -79,12 +82,13 @@
   padding: 2px 8px;
   font-size: 0.78rem;
   font-weight: 600;
+  inline-size: min-content;
 }
 
 .recipe-book-pages {
   position: relative;
-  width: min(460px, 72vw);
-  aspect-ratio: 9 / 16;
+  width: min(600px, 72vw);
+  aspect-ratio: 3 / 4;
   perspective: 1400px;
   margin: 0 auto;
 }
@@ -127,6 +131,8 @@
   border-radius: 16px;
   padding: 18px 22px;
   box-shadow: inset 0 0 0 1px rgba(122, 86, 52, 0.2);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   image-rendering: pixelated;
   clip-path: polygon(
@@ -177,6 +183,8 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 18px;
   text-align: center;
   box-shadow: inset 0 0 0 2px rgba(61, 31, 17, 0.7);
@@ -214,6 +222,13 @@
   opacity: 0.7;
 }
 
+.recipe-cover-icon {
+  width: 300px;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.2));
+}
+
 .recipe-cover-authors {
   display: flex;
   flex-direction: column;
@@ -222,7 +237,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   opacity: 0.8;
-  margin-top: auto;
+  margin-top: 0;
 }
 
 
@@ -254,11 +269,15 @@
 }
 
 .recipe-page-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 14px;
   overflow: auto;
   padding-right: 6px;
+}
+
+.recipe-page-section {
+  flex: 1 1 180px;
 }
 
 .recipe-page-section h4 {
@@ -273,7 +292,8 @@
 .recipe-page-section ol {
   margin: 0;
   padding-left: 18px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
   font-size: 0.9rem;
 }
