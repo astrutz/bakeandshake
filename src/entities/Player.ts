@@ -92,24 +92,29 @@ export class Player {
 
     let newDirection: Direction | null = null;
 
-    if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
-      this.velocityX = -this.speed;
-      newDirection = 'left';
-      this.isMoving = true;
-    }
-    if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) {
-      this.velocityX = this.speed;
-      newDirection = 'right';
-      this.isMoving = true;
-    }
-    if (this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) {
+    // Check which keys are pressed
+    const left = this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A'];
+    const right = this.keys['ArrowRight'] || this.keys['d'] || this.keys['D'];
+    const up = this.keys['ArrowUp'] || this.keys['w'] || this.keys['W'];
+    const down = this.keys['ArrowDown'] || this.keys['s'] || this.keys['S'];
+
+    // 4-directional movement only (no diagonals)
+    // Priority: vertical over horizontal
+    if (up && !down) {
       this.velocityY = -this.speed;
       newDirection = 'up';
       this.isMoving = true;
-    }
-    if (this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']) {
+    } else if (down && !up) {
       this.velocityY = this.speed;
       newDirection = 'down';
+      this.isMoving = true;
+    } else if (left && !right) {
+      this.velocityX = -this.speed;
+      newDirection = 'left';
+      this.isMoving = true;
+    } else if (right && !left) {
+      this.velocityX = this.speed;
+      newDirection = 'right';
       this.isMoving = true;
     }
 
@@ -121,12 +126,6 @@ export class Player {
         this.animationTimer = 0;
       }
       this.currentDirection = newDirection;
-    }
-
-    // Normalize diagonal movement
-    if (this.velocityX !== 0 && this.velocityY !== 0) {
-      this.velocityX *= 0.707; // 1/√2
-      this.velocityY *= 0.707;
     }
 
     // Update animation
