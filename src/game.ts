@@ -183,6 +183,11 @@ export class Game {
   private handleCustomerVisibilityChange() {
     // Rebuild collisions when customer visibility changes
     this.npcManager.updateCollisions();
+
+    const stationaryCustomers = this.customerManager.getCustomersForCollision();
+    stationaryCustomers.forEach((customer) => {
+      this.collisionSystem.addCollisionRect(customer.npc.getCollisionBox());
+    });
   }
 
   private handleLevelComplete() {

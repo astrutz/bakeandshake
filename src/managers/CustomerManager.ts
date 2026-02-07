@@ -18,11 +18,18 @@ export interface CustomerQueueEntry {
   arrivalTime: number;
   isActive: boolean;
   isCompleted: boolean;
+  isWalkingIn?: boolean;
+  targetX?: number;
+  targetY?: number;
 }
 
 export class CustomerManager {
   private customerQueue: CustomerQueueEntry[] = [];
   private gameTime: number = 0;
+
+  // Walking constants
+  private readonly ENTRY_X = 160;
+  private readonly WALK_SPEED = 80; // pixels per second
 
   // Callbacks
   private onCustomerArrive?: (customer: CustomerQueueEntry) => void;
@@ -73,17 +80,78 @@ export class CustomerManager {
         this.activateCustomer(customer);
       }
     }
+
+    // Update walking customers
+    this.updateWalkingCustomers(deltaTime);
   }
 
   /**
-   * Activate a customer (make them appear)
+   * Update customers that are walking to their position
+   */
+  private updateWalkingCustomers(deltaTime: number) {
+    for (const customer of this.customerQueue) {
+      if (
+        customer.isActive &&
+        customer.isWalkingIn &&
+        customer.targetX !== undefined &&
+        customer.targetY !== undefined
+      ) {
+        const npc = customer.npc;
+        const dx = customer.targetX - npc.x;
+        const dy = customer.targetY - npc.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // If close enough to target, snap to position and stop walking
+        if (distance < 2) {
+          npc.x = customer.targetX;
+          npc.y = customer.targetY;
+          customer.isWalkingIn = false;
+          console.log(`✅ Customer ${npc.name} arrived at position`);
+
+          // Update collisions now that customer has stopped
+          if (this.onVisibilityChange) {
+            this.onVisibilityChange();
+          }
+        } else {
+          // Move towards target
+          const moveDistance = this.WALK_SPEED * deltaTime;
+
+          // First move up (towards target Y)
+          if (Math.abs(dy) > 2) {
+            const dirY = dy / Math.abs(dy); // -1 or 1
+            const stepY = Math.min(Math.abs(dy), moveDistance);
+            npc.y += dirY * stepY;
+          }
+          // Then move horizontally (towards target X)
+          else if (Math.abs(dx) > 2) {
+            const dirX = dx / Math.abs(dx); // -1 or 1
+            const stepX = Math.min(Math.abs(dx), moveDistance);
+            npc.x += dirX * stepX;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Activate a customer (make them appear at entry point and walk to position)
    */
   private activateCustomer(customer: CustomerQueueEntry) {
     customer.isActive = true;
+    customer.isWalkingIn = true;
+
+    // Store the target position
+    customer.targetX = customer.npc.x;
+    customer.targetY = customer.npc.y;
+
+    // Place NPC at entry point (bottom of map, X = 160)
+    customer.npc.x = this.ENTRY_X;
+    customer.npc.y = 768; // Bottom of the map (assuming map height is 768)
+
     customer.npc.hidden = false; // Show the NPC
 
-    console.log(`👤 Customer arrived: ${customer.npc.name}`);
-    console.log(`📋 Order: ${customer.order.quantity}x ${customer.order.item}`);
+    console.log(`👤 Customer ${customer.npc.name} entering at (${this.ENTRY_X}, 768)`);
+    console.log(`📋 Walking to position (${customer.targetX}, ${customer.targetY})`);
 
     // Trigger visibility change callback to update collisions
     if (this.onVisibilityChange) {
@@ -130,8 +198,8 @@ export class CustomerManager {
    * Check if all customers have been served
    */
   private checkLevelComplete() {
-    const allCompleted = this.customerQueue.length > 0 &&
-      this.customerQueue.every((c) => c.isCompleted);
+    const allCompleted =
+      this.customerQueue.length > 0 && this.customerQueue.every((c) => c.isCompleted);
 
     if (allCompleted && this.onLevelComplete) {
       console.log('🎉 Level complete! All customers served!');
@@ -143,8 +211,7 @@ export class CustomerManager {
    * Check if level is complete (public method)
    */
   public isLevelComplete(): boolean {
-    return this.customerQueue.length > 0 &&
-      this.customerQueue.every((c) => c.isCompleted);
+    return this.customerQueue.length > 0 && this.customerQueue.every((c) => c.isCompleted);
   }
 
   /**
@@ -159,6 +226,15 @@ export class CustomerManager {
       }
     }
     return null;
+  }
+
+  /**
+   * Get all customers that should have collision (not walking in)
+   */
+  public getCustomersForCollision(): CustomerQueueEntry[] {
+    return this.customerQueue.filter(
+      (c) => c.isActive && !c.isCompleted && !c.npc.hidden && !c.isWalkingIn
+    );
   }
 
   /**
@@ -232,7 +308,11 @@ export class CustomerManager {
   /**
    * Render customer interaction prompts
    */
-  public renderInteractionPrompts(ctx: CanvasRenderingContext2D, player: Player, inventoryManager: InventoryManager): void {
+  public renderInteractionPrompts(
+    ctx: CanvasRenderingContext2D,
+    player: Player,
+    inventoryManager: InventoryManager,
+  ): void {
     // Get all active customers
     const activeCustomers = this.getActiveCustomers();
 
@@ -255,7 +335,7 @@ export class CustomerManager {
         ctx.font = 'bold 14px Arial';
         const textWidth = ctx.measureText(promptText).width;
         const padding = 20;
-        const boxWidth = textWidth + (padding * 2);
+        const boxWidth = textWidth + padding * 2;
         const boxHeight = 28;
 
         // Background
