@@ -9,7 +9,7 @@ import { XPManager } from './managers/XPManager';
 import { CustomerManager, type CustomerQueueEntry } from './managers/CustomerManager';
 import { InventoryManager } from './managers/InventoryManager';
 import { SaveManager } from './managers/SaveManager';
-import { testCollisions, loadCollisionsFromFile } from './data/collisions';
+import { loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
 import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
@@ -374,12 +374,24 @@ export class Game {
 
       // Handle pause menu navigation
       if (this.pauseMenu.isPausedState()) {
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-          this.pauseMenu.moveSelectionUp();
-        } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-          this.pauseMenu.moveSelectionDown();
-        } else if (e.key === 'Enter') {
-          this.handleMenuSelection();
+        if (this.pauseMenu.isMainMenuConfirmOpen()) {
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+            this.pauseMenu.moveConfirmSelectionUp();
+          } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+            this.pauseMenu.moveConfirmSelectionDown();
+          } else if (e.key === 'Enter') {
+            this.handleMenuSelection();
+          } else if (e.key === 'Escape') {
+            this.pauseMenu.closeMainMenuConfirm();
+          }
+        } else {
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+            this.pauseMenu.moveSelectionUp();
+          } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+            this.pauseMenu.moveSelectionDown();
+          } else if (e.key === 'Enter') {
+            this.handleMenuSelection();
+          }
         }
         return;
       }
@@ -451,6 +463,19 @@ export class Game {
   }
 
   private async handleMenuSelection() {
+    if (this.pauseMenu.isMainMenuConfirmOpen()) {
+      const { action } = this.pauseMenu.selectMainMenuConfirm();
+      if (action === 'save_and_menu') {
+        this.saveGame();
+      }
+      if (action === 'save_and_menu' || action === 'menu_no_save') {
+        this.pauseMenu.closeMainMenuConfirm();
+        this.pauseMenu.setPaused(false);
+        window.dispatchEvent(new CustomEvent('open-main-menu'));
+      }
+      return;
+    }
+
     const { action, close } = this.pauseMenu.selectOption();
 
     switch (action) {
@@ -474,15 +499,7 @@ export class Game {
         break;
 
       case 'main_menu': {
-        // TODO Make hübsch dialog
-        const wantsSave = window.confirm(
-          'Do you want to save before returning to the main menu? Unsaved progress will be lost.',
-        );
-        if (wantsSave) {
-          this.saveGame();
-        }
-        this.pauseMenu.setPaused(false);
-        window.dispatchEvent(new CustomEvent('open-main-menu'));
+        this.pauseMenu.openMainMenuConfirm();
         break;
       }
     }
