@@ -5,6 +5,9 @@ export class PauseMenu {
   private isPaused: boolean = false;
   private selectedOption: number = 0;
   private menuOptions: string[] = ['Resume', 'Save Game', 'Load Game', 'Delete Save', 'Main Menu'];
+  private mainMenuConfirmOpen: boolean = false;
+  private confirmSelectedOption: number = 0;
+  private confirmOptions: string[] = ['Save and go back to menu', 'Go back to menu'];
 
   // Feedback messages
   private feedbackMessage: string = '';
@@ -28,6 +31,7 @@ export class PauseMenu {
     if (paused) {
       this.selectedOption = 0;
       this.feedbackMessage = '';
+      this.mainMenuConfirmOpen = false;
     }
   }
 
@@ -40,6 +44,7 @@ export class PauseMenu {
     if (this.isPaused) {
       this.selectedOption = 0;
       this.feedbackMessage = '';
+      this.mainMenuConfirmOpen = false;
     }
   }
 
@@ -55,19 +60,63 @@ export class PauseMenu {
 
   public moveSelectionUp() {
     if (!this.isPaused) return;
-    this.selectedOption =
-      (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+    if (this.mainMenuConfirmOpen) return;
+    const saveExists = SaveManager.getSaveInfo().exists;
+    for (let i = 0; i < this.menuOptions.length; i++) {
+      this.selectedOption =
+        (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+      if (!this.isOptionDisabled(this.menuOptions[this.selectedOption], saveExists)) {
+        break;
+      }
+    }
   }
 
   public moveSelectionDown() {
     if (!this.isPaused) return;
-    this.selectedOption = (this.selectedOption + 1) % this.menuOptions.length;
+    if (this.mainMenuConfirmOpen) return;
+    const saveExists = SaveManager.getSaveInfo().exists;
+    for (let i = 0; i < this.menuOptions.length; i++) {
+      this.selectedOption = (this.selectedOption + 1) % this.menuOptions.length;
+      if (!this.isOptionDisabled(this.menuOptions[this.selectedOption], saveExists)) {
+        break;
+      }
+    }
+  }
+
+  public openMainMenuConfirm() {
+    if (!this.isPaused) return;
+    this.mainMenuConfirmOpen = true;
+    this.confirmSelectedOption = 0;
+  }
+
+  public closeMainMenuConfirm() {
+    this.mainMenuConfirmOpen = false;
+  }
+
+  public isMainMenuConfirmOpen(): boolean {
+    return this.mainMenuConfirmOpen;
+  }
+
+  public moveConfirmSelectionUp() {
+    if (!this.isPaused || !this.mainMenuConfirmOpen) return;
+    this.confirmSelectedOption =
+      (this.confirmSelectedOption - 1 + this.confirmOptions.length) % this.confirmOptions.length;
+  }
+
+  public moveConfirmSelectionDown() {
+    if (!this.isPaused || !this.mainMenuConfirmOpen) return;
+    this.confirmSelectedOption = (this.confirmSelectedOption + 1) % this.confirmOptions.length;
   }
 
   public selectOption(): { action: string; close: boolean } {
     if (!this.isPaused) return { action: '', close: false };
+    if (this.mainMenuConfirmOpen) return { action: '', close: false };
 
     const option = this.menuOptions[this.selectedOption];
+    const saveExists = SaveManager.getSaveInfo().exists;
+    if (this.isOptionDisabled(option, saveExists)) {
+      return { action: '', close: false };
+    }
 
     switch (option) {
       case 'Resume':
@@ -88,6 +137,18 @@ export class PauseMenu {
   public showFeedback(message: string) {
     this.feedbackMessage = message;
     this.feedbackTimer = this.FEEDBACK_DURATION;
+  }
+
+  public selectMainMenuConfirm(): { action: 'save_and_menu' | 'menu_no_save' | ''; close: boolean } {
+    if (!this.isPaused || !this.mainMenuConfirmOpen) return { action: '', close: false };
+    const option = this.confirmOptions[this.confirmSelectedOption];
+    if (option === 'Save and go back to menu') {
+      return { action: 'save_and_menu', close: true };
+    }
+    if (option === 'Go back to menu') {
+      return { action: 'menu_no_save', close: true };
+    }
+    return { action: '', close: false };
   }
 
   public setPlayerStats(level: number, xp: number, coins: number) {
@@ -147,7 +208,7 @@ export class PauseMenu {
       const y = startY + index * (this.buttonHeight + this.buttonSpacing);
       const x = canvasWidth / 2 - this.buttonWidth / 2;
       const isSelected = index === this.selectedOption;
-      const isDisabled = (option === 'Load Game' || option === 'Delete Save') && !saveInfo.exists;
+      const isDisabled = this.isOptionDisabled(option, saveInfo.exists);
 
       // Button background
       if (isDisabled) {
@@ -173,6 +234,50 @@ export class PauseMenu {
       ctx.textBaseline = 'middle';
       ctx.fillText(option, canvasWidth / 2, y + this.buttonHeight / 2);
     });
+
+    // Draw confirm dialog for main menu
+    if (this.mainMenuConfirmOpen) {
+      const dialogWidth = 520;
+      const dialogHeight = 220;
+      const dialogX = canvasWidth / 2 - dialogWidth / 2;
+      const dialogY = canvasHeight / 2 - dialogHeight / 2;
+
+      ctx.fillStyle = Alpha.brownBoxSolid;
+      ctx.strokeStyle = Colors.chocolate;
+      ctx.lineWidth = UI.borderWidth.thick;
+      ctx.fillRect(dialogX, dialogY, dialogWidth, dialogHeight);
+      ctx.strokeRect(dialogX, dialogY, dialogWidth, dialogHeight);
+
+      ctx.fillStyle = Colors.moccasin;
+      ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Return to Main Menu', canvasWidth / 2, dialogY + 42);
+
+      const buttonWidth = dialogWidth - 80;
+      const buttonHeight = 50;
+      const buttonGap = 14;
+      const firstButtonY = dialogY + 88;
+
+      this.confirmOptions.forEach((option, index) => {
+        const isSelected = index === this.confirmSelectedOption;
+        const x = canvasWidth / 2 - buttonWidth / 2;
+        const y = firstButtonY + index * (buttonHeight + buttonGap);
+
+        ctx.fillStyle = isSelected ? Colors.chocolate : Colors.saddleBrown;
+        ctx.fillRect(x, y, buttonWidth, buttonHeight);
+
+        ctx.strokeStyle = isSelected ? Colors.moccasin : Colors.chocolate;
+        ctx.lineWidth = isSelected ? UI.borderWidth.thick : UI.borderWidth.thin;
+        ctx.strokeRect(x, y, buttonWidth, buttonHeight);
+
+        ctx.fillStyle = Colors.moccasin;
+        ctx.font = isSelected
+          ? `bold ${Fonts.sizes.large} ${Fonts.body}`
+          : `${Fonts.sizes.medium} ${Fonts.body}`;
+        ctx.fillText(option, canvasWidth / 2, y + buttonHeight / 2);
+      });
+    }
 
     // Draw feedback message
     if (this.feedbackMessage) {
@@ -200,5 +305,9 @@ export class PauseMenu {
     );
 
     ctx.restore();
+  }
+
+  private isOptionDisabled(option: string, saveExists: boolean): boolean {
+    return (option === 'Load Game' || option === 'Delete Save') && !saveExists;
   }
 }
