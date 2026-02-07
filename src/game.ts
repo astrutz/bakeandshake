@@ -422,9 +422,10 @@ export class Game {
         const wantsSave = window.confirm(
           'Do you want to save before returning to the main menu? Unsaved progress will be lost.',
         );
-        console.log(wantsSave)
         if (wantsSave) {
           this.saveGame();
+        } else {
+          break;
         }
         this.pauseMenu.setPaused(false);
         window.dispatchEvent(new CustomEvent('open-main-menu'));
