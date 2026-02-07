@@ -1,3 +1,6 @@
+import { SoundManager } from '../audio/SoundManager.ts';
+import { SOUND_IDS } from '../audio/SoundId.ts';
+
 import { Colors, Alpha, Fonts, UI } from '../config/theme';
 
 export class DialogBox {
@@ -19,6 +22,12 @@ export class DialogBox {
   private borderColor: string = Colors.chocolate;
   private textColor: string = Colors.moccasin;
   private shadowColor: string = Alpha.shadow;
+
+  private soundManager: SoundManager;
+
+  constructor(soundManager: SoundManager) {
+    this.soundManager = soundManager;
+  }
 
   public show(text: string) {
     this.isVisible = true;
@@ -59,6 +68,7 @@ export class DialogBox {
       // Check if complete
       if (this.currentCharIndex >= this.fullText.length) {
         this.isComplete = true;
+        this.soundManager.stopSound(SOUND_IDS.NPC_TALK);
       }
     }
   }
