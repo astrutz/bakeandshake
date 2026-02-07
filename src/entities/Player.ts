@@ -66,7 +66,7 @@ export class Player {
       console.error('Failed to load player sprite sheet');
       this.spriteLoaded = false;
     };
-    this.spriteSheet.src = '/player.png';
+    this.spriteSheet.src = '/sprites/player.png';
   }
 
   private setupKeyboardControls() {

@@ -121,7 +121,7 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
                 </div>
                 <div class="recipe-cover-subtitle">Bake 'n Shake</div>
                 </div>
-                <img alt="Croissant" class="recipe-cover-icon" src="/croissant.png" />
+                <img alt="Croissant" class="recipe-cover-icon" src="/recipes/croissant.png" />
                 <div class="recipe-cover-authors">
                   <span>Alex Strutz</span>
                   <span>Christin Zieba</span>
@@ -131,34 +131,34 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
               </div>
             </div>
           </article>
-          ${ recipes
+          ${recipes
     .map(
       (recipe, index) => `
-                <article class="recipe-page" data-recipe-page="${ index + 1 }">
+                <article class="recipe-page" data-recipe-page="${index + 1}">
                   <div class="recipe-page-inner">
-                    <img class="recipe-page-image" src="${ recipe.image }" alt="${ recipe.imageAlt }" />
+                    <img class="recipe-page-image" src="${recipe.image}" alt="${recipe.imageAlt}" />
                     <div class="recipe-page-header">
                       <div>
-                        <h3>${ recipe.title }</h3>
-                        <p>${ recipe.blurb }</p>
+                        <h3>${recipe.title}</h3>
+                        <p>${recipe.blurb}</p>
                       </div>
-                      <div class="recipe-book-badge">${ recipe.badge }</div>
+                      <div class="recipe-book-badge">${recipe.badge}</div>
                     </div>
                     <div class="recipe-page-meta">
-                      <span>${ recipe.time }</span>
-                      <span>${ recipe.difficulty }</span>
+                      <span>${recipe.time}</span>
+                      <span>${recipe.difficulty}</span>
                     </div>
                     <div class="recipe-page-body">
                       <div class="recipe-page-section">
                         <h4>Zutaten</h4>
                         <ul>
-                          ${ recipe.ingredients.map((item) => `<li>${ item }</li>`).join('') }
+                          ${recipe.ingredients.map((item) => `<li>${item}</li>`).join('')}
                         </ul>
                       </div>
                       <div class="recipe-page-section">
                         <h4>Schritte</h4>
                         <ol>
-                          ${ recipe.steps.map((step) => `<li>${ step }</li>`).join('') }
+                          ${recipe.steps.map((step) => `<li>${step}</li>`).join('')}
                         </ol>
                       </div>
                     </div>
@@ -166,8 +166,8 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
                 </article>
               `,
     )
-    .join('') }
-          <article class="recipe-page recipe-page-back" data-recipe-page="${ recipes.length + 1 }">
+    .join('')}
+          <article class="recipe-page recipe-page-back" data-recipe-page="${recipes.length + 1}">
             <div class="recipe-page-inner recipe-cover-inner">
               <div class="recipe-cover-frame">
                 <div>

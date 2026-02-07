@@ -48,7 +48,7 @@ Place your Tiled JSON export in the `/public` folder and load it:
 
 ```typescript
 const game = new Game(canvas);
-await game.loadCollisionsFromTiled('/bakery.json');
+await game.loadCollisionsFromTiled('/map/bakery.json');
 ```
 
 Your Tiled map should have an **Object Layer** named "Collision" with rectangle objects defining walls and obstacles.

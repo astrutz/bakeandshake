@@ -502,7 +502,7 @@ export class Game {
       console.error('Failed to load map image');
       this.mapLoaded = false;
     };
-    this.mapImage.src = '/map.png';
+    this.mapImage.src = '/map/map.png';
   }
 
   private update(deltaTime: number) {
