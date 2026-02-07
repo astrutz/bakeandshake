@@ -6,6 +6,8 @@ type RecipeCard = {
   difficulty: string;
   blurb: string;
   badge: string;
+  image: string;
+  imageAlt: string;
   ingredients: string[];
   steps: string[];
 };
@@ -17,6 +19,8 @@ const DEFAULT_RECIPES: RecipeCard[] = [
     difficulty: 'Einfach',
     blurb: 'Ein sehr einfaches Brot mit Übernachtgare und knuspriger Kruste.',
     badge: 'Mona Core',
+    image: '/dinkelmona.png',
+    imageAlt: 'Dinkelbrot',
     ingredients: [
       '10 g frische Hefe',
       '450 g lauwarmes Wasser',
@@ -34,6 +38,8 @@ const DEFAULT_RECIPES: RecipeCard[] = [
   },
   {
     title: 'Pizzateig',
+    image: '/pizzateig.png',
+    imageAlt: 'Pizzateig',
     time: '1 h 15 min',
     difficulty: 'Einfach',
     blurb: 'Klassischer Pizzateig mit kurzer Gehzeit.',
@@ -55,6 +61,8 @@ const DEFAULT_RECIPES: RecipeCard[] = [
   },
   {
     title: 'Focaccia',
+    image: '/pita.png',
+    imageAlt: 'Focaccia',
     time: '1 h 55 min',
     difficulty: 'Einfach',
     blurb: 'Italienisches Fladenbrot mit Olivenoel und Rosmarin.',
@@ -128,6 +136,7 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
               (recipe, index) => `
                 <article class="recipe-page" data-recipe-page="${index + 1}">
                   <div class="recipe-page-inner">
+                    <img class="recipe-page-image" src="${recipe.image}" alt="${recipe.imageAlt}" />
                     <div class="recipe-page-header">
                       <div>
                         <h3>${recipe.title}</h3>
