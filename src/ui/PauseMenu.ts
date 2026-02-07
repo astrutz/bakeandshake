@@ -4,7 +4,7 @@ import { Colors, Alpha, Fonts, UI } from '../config/theme';
 export class PauseMenu {
   private isPaused: boolean = false;
   private selectedOption: number = 0;
-  private menuOptions: string[] = ['Resume', 'Save Game', 'Load Game', 'Delete Save'];
+  private menuOptions: string[] = ['Resume', 'Save Game', 'Load Game', 'Delete Save', 'Main Menu'];
 
   // Feedback messages
   private feedbackMessage: string = '';
@@ -78,6 +78,8 @@ export class PauseMenu {
         return { action: 'load', close: true };
       case 'Delete Save':
         return { action: 'delete', close: false };
+      case 'Main Menu':
+        return { action: 'main_menu', close: true };
       default:
         return { action: '', close: false };
     }

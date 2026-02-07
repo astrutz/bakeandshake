@@ -394,7 +394,7 @@ export class Game {
     });
   }
 
-  private handleMenuSelection() {
+  private async handleMenuSelection() {
     const { action, close } = this.pauseMenu.selectOption();
 
     switch (action) {
@@ -416,6 +416,20 @@ export class Game {
       case 'delete':
         this.deleteSave();
         break;
+
+      case 'main_menu': {
+        // TODO Make hübsch dialog
+        const wantsSave = window.confirm(
+          'Do you want to save before returning to the main menu? Unsaved progress will be lost.',
+        );
+        console.log(wantsSave)
+        if (wantsSave) {
+          this.saveGame();
+        }
+        this.pauseMenu.setPaused(false);
+        window.dispatchEvent(new CustomEvent('open-main-menu'));
+        break;
+      }
     }
   }
 

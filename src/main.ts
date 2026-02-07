@@ -4,6 +4,7 @@ import { AmbientAudioManager } from './audio/AmbientAudioManager.ts';
 import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { initRecipeBookOverview } from './ui/recipe-book/recipe-book.ts';
+import { createMainMenu } from './ui/main-menu/main-menu';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -75,8 +76,22 @@ musicToggleBtn?.addEventListener('click', async () => {
   musicRunning = !musicRunning;
 });
 
-// optional: Autostart Game
-game.start();
-
 // Initialize recipe book overview overlay
-initRecipeBookOverview();
+const openRecipeBook = initRecipeBookOverview();
+
+// Main menu
+const menu = createMainMenu({
+  onStart: () => {
+    isRunning = true;
+    toggleBtn && (toggleBtn.textContent = 'Pause');
+    game.start();
+  },
+  onRecipes: () => {
+    openRecipeBook?.();
+  },
+});
+
+window.addEventListener('open-main-menu', () => {
+  game.stop();
+  menu.show();
+});
