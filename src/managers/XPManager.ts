@@ -36,12 +36,6 @@ export class XPManager {
     return this.currentLevel;
   }
 
-  public getXPToNextLevel(): number {
-    const nextLevelData = getLevelData(this.currentLevel + 1);
-    if (!nextLevelData) return 0;
-    return nextLevelData.xpRequired - this.currentXP;
-  }
-
   public getXPProgress(): number {
     return getXPProgressInLevel(this.currentXP, this.currentLevel);
   }
@@ -122,15 +116,23 @@ export class XPManager {
 
     // Position at bottom-left corner
     const x = 24;
-    const y = canvasHeight - 24;
     const barWidth = 300;
     const barHeight = 24; // Reduced from 32
-    const padding = 4; // Reduced from 10
+    const labelGap = 10;
+    const labelHeight = barHeight;
+    const y = canvasHeight - 24 - labelHeight - labelGap;
 
     // Level indicator (badge to the left of bar)
     const badgeSize = 48;
     const badgeX = x - badgeSize - 12;
     const badgeY = y - barHeight / 2;
+
+    // Level label above the XP bar
+    const levelLabel = `Level ${this.currentLevel}`;
+    ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`;
+    const labelWidth = barWidth;
+    const labelX = x;
+    const labelY = y + labelGap;
 
     // Level up animation (glow effect)
     if (this.levelUpAnimationTimer > 0) {
@@ -166,6 +168,23 @@ export class XPManager {
     ctx.font = `${Fonts.sizes.tiny} ${Fonts.body}`;
     ctx.fillText('LVL', badgeX, badgeY - 18);
 
+    // Level label box
+    ctx.fillStyle = Alpha.brownBox;
+    ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+    ctx.strokeStyle = Colors.chocolate;
+    ctx.lineWidth = UI.borderWidth.thin;
+    ctx.strokeRect(labelX, labelY, labelWidth, labelHeight);
+
+    ctx.fillStyle = Colors.moccasin;
+    ctx.strokeStyle = Colors.saddleBrown;
+    ctx.lineWidth = 2;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const labelCenterX = labelX + labelWidth / 2;
+    const labelCenterY = labelY + labelHeight / 2;
+    ctx.strokeText(levelLabel, labelCenterX, labelCenterY);
+    ctx.fillText(levelLabel, labelCenterX, labelCenterY);
+
     // XP bar background
     ctx.fillStyle = Alpha.brownBox;
     ctx.fillRect(x, y - barHeight, barWidth, barHeight);
@@ -176,13 +195,13 @@ export class XPManager {
     ctx.strokeRect(x, y - barHeight, barWidth, barHeight);
 
     // XP bar fill (progress) - behind the text
-    const fillWidth = (barWidth - padding * 2) * this.barFillProgress;
-    const gradient = ctx.createLinearGradient(x + padding, 0, x + padding + fillWidth, 0);
+    const fillWidth = (barWidth * 2) * this.barFillProgress;
+    const gradient = ctx.createLinearGradient(x, 0, x + fillWidth, 0);
     gradient.addColorStop(0, Colors.gold);
     gradient.addColorStop(1, Colors.darkGold);
 
     ctx.fillStyle = gradient;
-    ctx.fillRect(x + padding, y - barHeight + padding, fillWidth, barHeight - padding * 2);
+    ctx.fillRect(x, y - barHeight, fillWidth, barHeight * 2);
 
     // XP text - rendered on top of the bar
     const currentLevelData = getLevelData(this.currentLevel);
