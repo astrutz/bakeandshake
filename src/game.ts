@@ -659,7 +659,17 @@ export class Game {
     this.player.render(this.ctx);
 
     // Render interaction prompts (must be after NPCs and player for proper layering)
-    this.npcManager.renderInteractionPrompts(this.ctx);
+    // Create a set of customer NPC IDs to exclude
+    const customerNPCIds = new Set(
+      this.customerManager.getActiveCustomers().map(c => c.npc.id)
+    );
+    this.npcManager.renderInteractionPrompts(this.ctx, customerNPCIds);
+
+    // Render customer-specific interaction prompts
+    this.customerManager.renderInteractionPrompts(this.ctx, this.player, this.inventoryManager);
+
+    // Render baking interaction prompt
+    this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
 
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(

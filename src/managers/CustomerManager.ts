@@ -1,5 +1,6 @@
 import { NPC } from '../entities/NPC';
 import { Player } from '../entities/Player';
+import type { InventoryManager } from './InventoryManager.ts';
 
 export interface CustomerOrder {
   customerId: string;
@@ -226,5 +227,54 @@ export class CustomerManager {
    */
   public getGameTime(): number {
     return this.gameTime;
+  }
+
+  /**
+   * Render customer interaction prompts
+   */
+  public renderInteractionPrompts(ctx: CanvasRenderingContext2D, player: Player, inventoryManager: InventoryManager): void {
+    // Get all active customers
+    const activeCustomers = this.getActiveCustomers();
+
+    activeCustomers.forEach((customer) => {
+      const npc = customer.npc;
+
+      // Check if player is near this customer
+      if (npc.canInteractWith(player.x, player.y, player.width, player.height)) {
+        ctx.save();
+
+        // Check if player has the required items
+        const hasItems = inventoryManager.hasItem(customer.order.item, customer.order.quantity);
+
+        // Different text based on whether player can serve or not
+        const promptText = hasItems ? 'Press O to serve' : 'Press E to talk';
+        const promptX = npc.x + npc.width / 2;
+        const promptY = npc.y - 40;
+
+        // Measure text to calculate proper width
+        ctx.font = 'bold 14px Arial';
+        const textWidth = ctx.measureText(promptText).width;
+        const padding = 20;
+        const boxWidth = textWidth + (padding * 2);
+        const boxHeight = 28;
+
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
+
+        // Border - green if ready to serve, normal otherwise
+        ctx.strokeStyle = hasItems ? 'rgba(144, 238, 144, 1)' : 'rgba(255, 228, 181, 1)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
+
+        // Text
+        ctx.fillStyle = hasItems ? 'rgba(144, 238, 144, 1)' : 'rgba(255, 228, 181, 1)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(promptText, promptX, promptY - 6);
+
+        ctx.restore();
+      }
+    });
   }
 }
