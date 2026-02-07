@@ -1,3 +1,7 @@
+import { GameConfig } from '../config/gameConfig';
+
+type Direction = 'down' | 'left' | 'right' | 'up';
+
 export class Player {
   public x: number;
   public y: number;
@@ -7,17 +11,40 @@ export class Player {
   public velocityY: number;
 
   // Player sprite
-  private sprite: HTMLImageElement | null = null;
+  private spriteSheet: HTMLImageElement | null = null;
   private spriteLoaded: boolean = false;
+
+  // Sprite animation
+  private readonly SPRITE_WIDTH = 32;
+  private readonly SPRITE_HEIGHT = 32;
+  private readonly FRAMES_PER_DIRECTION = 3;
+  private currentFrame: number = 0;
+  private animationTimer: number = 0;
+  private readonly ANIMATION_SPEED = 0.15; // seconds per frame
+  private currentDirection: Direction = 'down';
+  private isMoving: boolean = false;
+
+  // Sprite sheet layout (row index for each direction)
+  private readonly DIRECTION_ROWS: Record<Direction, number> = {
+    down: 0,
+    left: 1,
+    right: 2,
+    up: 3,
+  };
 
   // Keyboard controls
   private keys: { [key: string]: boolean } = {};
-  private speed: number = 200; // pixels per second
+  private speed: number = GameConfig.player.speed;
 
   // Movement lock
   private movementLocked: boolean = false;
 
-  constructor(x: number, y: number, width: number = 50, height: number = 50) {
+  constructor(
+    x: number,
+    y: number,
+    width: number = GameConfig.player.width,
+    height: number = GameConfig.player.height,
+  ) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -30,16 +57,16 @@ export class Player {
   }
 
   private loadSprite() {
-    this.sprite = new Image();
-    this.sprite.onload = () => {
+    this.spriteSheet = new Image();
+    this.spriteSheet.onload = () => {
       this.spriteLoaded = true;
-      console.log('Player sprite loaded');
+      console.log('Player sprite sheet loaded');
     };
-    this.sprite.onerror = () => {
-      console.error('Failed to load player sprite');
+    this.spriteSheet.onerror = () => {
+      console.error('Failed to load player sprite sheet');
       this.spriteLoaded = false;
     };
-    this.sprite.src = '/testplayer.png';
+    this.spriteSheet.src = '/player.png';
   }
 
   private setupKeyboardControls() {
@@ -56,29 +83,63 @@ export class Player {
     // Handle keyboard input
     this.velocityX = 0;
     this.velocityY = 0;
+    this.isMoving = false;
 
     // Don't allow movement if locked (e.g., during dialog)
     if (this.movementLocked) {
       return { potentialX: this.x, potentialY: this.y };
     }
 
+    let newDirection: Direction | null = null;
+
     if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
       this.velocityX = -this.speed;
+      newDirection = 'left';
+      this.isMoving = true;
     }
     if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) {
       this.velocityX = this.speed;
+      newDirection = 'right';
+      this.isMoving = true;
     }
     if (this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) {
       this.velocityY = -this.speed;
+      newDirection = 'up';
+      this.isMoving = true;
     }
     if (this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']) {
       this.velocityY = this.speed;
+      newDirection = 'down';
+      this.isMoving = true;
+    }
+
+    // Update direction if moving
+    if (newDirection) {
+      // Reset animation if direction changed
+      if (this.currentDirection !== newDirection) {
+        this.currentFrame = 0;
+        this.animationTimer = 0;
+      }
+      this.currentDirection = newDirection;
     }
 
     // Normalize diagonal movement
     if (this.velocityX !== 0 && this.velocityY !== 0) {
       this.velocityX *= 0.707; // 1/√2
       this.velocityY *= 0.707;
+    }
+
+    // Update animation
+    if (this.isMoving) {
+      this.animationTimer += deltaTime;
+      if (this.animationTimer >= this.ANIMATION_SPEED) {
+        this.currentFrame = (this.currentFrame + 1) % this.FRAMES_PER_DIRECTION;
+        this.animationTimer = 0;
+      }
+    } else {
+      // Reset to first frame when standing still
+      this.currentFrame = 0;
+      this.animationTimer = 0;
     }
 
     // Calculate potential new position (will be validated by collision system)
@@ -105,6 +166,7 @@ export class Player {
     if (locked) {
       this.velocityX = 0;
       this.velocityY = 0;
+      this.isMoving = false;
     }
   }
 
@@ -113,9 +175,26 @@ export class Player {
   }
 
   public render(ctx: CanvasRenderingContext2D) {
-    if (this.spriteLoaded && this.sprite) {
-      // Draw the sprite image scaled to width x height
-      ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+    if (this.spriteLoaded && this.spriteSheet) {
+      // Calculate source position in sprite sheet
+      const row = this.DIRECTION_ROWS[this.currentDirection];
+      const col = this.currentFrame;
+
+      const sourceX = col * this.SPRITE_WIDTH;
+      const sourceY = row * this.SPRITE_HEIGHT;
+
+      // Draw the sprite from the sheet
+      ctx.drawImage(
+        this.spriteSheet,
+        sourceX,
+        sourceY,
+        this.SPRITE_WIDTH,
+        this.SPRITE_HEIGHT,
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+      );
     } else {
       // Fallback: Draw rectangle if sprite not loaded
       ctx.fillStyle = '#646cff';

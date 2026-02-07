@@ -1,3 +1,6 @@
+import { Colors, Fonts } from '../config/theme';
+import { GameConfig } from '../config/gameConfig';
+
 export interface NPCConfig {
   id: string;
   name: string;
@@ -29,10 +32,10 @@ export class NPC {
     this.name = config.name;
     this.x = config.x;
     this.y = config.y;
-    this.width = config.width || 50;
-    this.height = config.height || 50;
+    this.width = config.width || GameConfig.npc.defaultWidth;
+    this.height = config.height || GameConfig.npc.defaultHeight;
     this.dialogLines = config.dialogLines;
-    this.interactionRadius = config.interactionRadius || 80;
+    this.interactionRadius = config.interactionRadius || GameConfig.npc.defaultInteractionRadius;
 
     if (config.spritePath) {
       this.loadSprite(config.spritePath);
@@ -57,20 +60,20 @@ export class NPC {
       ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
     } else {
       // Fallback: Draw a colored rectangle
-      ctx.fillStyle = '#FFA500'; // Orange for NPCs
+      ctx.fillStyle = Colors.orange;
       ctx.fillRect(this.x, this.y, this.width, this.height);
 
-      ctx.strokeStyle = '#FF8C00';
+      ctx.strokeStyle = Colors.darkGold;
       ctx.lineWidth = 2;
       ctx.strokeRect(this.x, this.y, this.width, this.height);
 
       // Draw name label
       ctx.save();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '12px Arial';
+      ctx.fillStyle = Colors.white;
+      ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(this.name, this.x + this.width / 2, this.y - 5);
+      ctx.fillText(this.name, this.x + this.width / 2, this.y - 6);
       ctx.restore();
     }
   }
@@ -80,23 +83,23 @@ export class NPC {
 
     // Draw "Press E" prompt above NPC
     const promptX = this.x + this.width / 2;
-    const promptY = this.y - 30;
+    const promptY = this.y - 40; // Was 36
 
-    // Background
+    // Background (larger box)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(promptX - 35, promptY - 15, 70, 20);
+    ctx.fillRect(promptX - 50, promptY - 20, 100, 28); // Was 42, 18, 84, 24
 
     // Border
-    ctx.strokeStyle = '#FFE4B5';
+    ctx.strokeStyle = Colors.moccasin;
     ctx.lineWidth = 2;
-    ctx.strokeRect(promptX - 35, promptY - 15, 70, 20);
+    ctx.strokeRect(promptX - 50, promptY - 20, 100, 28);
 
-    // Text
-    ctx.fillStyle = '#FFE4B5';
-    ctx.font = 'bold 12px Arial';
+    // Text (larger font)
+    ctx.fillStyle = Colors.moccasin;
+    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Press E', promptX, promptY - 5);
+    ctx.fillText('Press E', promptX, promptY - 6);
 
     ctx.restore();
   }
@@ -124,9 +127,6 @@ export class NPC {
     this.currentDialogIndex = 0;
   }
 
-  /**
-   * Check if a point is within interaction range
-   */
   public isInRange(x: number, y: number): boolean {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
@@ -134,9 +134,6 @@ export class NPC {
     return distance <= this.interactionRadius;
   }
 
-  /**
-   * Check if player is in interaction range (using player's center)
-   */
   public canInteractWith(
     playerX: number,
     playerY: number,

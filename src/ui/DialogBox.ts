@@ -1,6 +1,8 @@
 import { SoundManager } from '../audio/SoundManager.ts';
 import { SOUND_IDS } from '../audio/SoundId.ts';
 
+import { Colors, Alpha, Fonts, UI } from '../config/theme';
+
 export class DialogBox {
   private isVisible: boolean = false;
   private fullText: string = '';
@@ -10,16 +12,16 @@ export class DialogBox {
   private timeSinceLastChar: number = 0;
   private isComplete: boolean = false;
 
-  // Box styling
-  private padding: number = 20;
-  private boxHeight: number = 150;
-  private borderWidth: number = 4;
+  // Box styling (scaled for 1280x960)
+  private padding: number = UI.padding.medium;
+  private boxHeight: number = 180; // Was 150
+  private borderWidth: number = UI.borderWidth.thick;
 
   // Colors
-  private bgColor: string = '#8B4513'; // Saddle brown
-  private borderColor: string = '#D2691E'; // Chocolate
-  private textColor: string = '#FFE4B5'; // Moccasin
-  private shadowColor: string = 'rgba(0, 0, 0, 0.5)';
+  private bgColor: string = Colors.saddleBrown;
+  private borderColor: string = Colors.chocolate;
+  private textColor: string = Colors.moccasin;
+  private shadowColor: string = Alpha.shadow;
 
   private soundManager: SoundManager;
 
@@ -92,19 +94,19 @@ export class DialogBox {
       boxX + this.borderWidth,
       boxY + this.borderWidth,
       boxWidth - this.borderWidth * 2,
-      this.boxHeight - this.borderWidth * 2,
+      this.boxHeight - this.borderWidth * 2
     );
 
     // Draw text
     ctx.fillStyle = this.textColor;
-    ctx.font = '20px "Courier New", monospace';
+    ctx.font = `${Fonts.sizes.medium} ${Fonts.monospace}`;
     ctx.textBaseline = 'top';
 
     // Word wrap the text
     const maxWidth = boxWidth - this.padding * 2 - this.borderWidth * 2;
     const lines = this.wrapText(ctx, this.displayedText, maxWidth);
 
-    const lineHeight = 28;
+    const lineHeight = 32; // Was 28
     const textX = boxX + this.padding + this.borderWidth;
     const textY = boxY + this.padding + this.borderWidth;
 
@@ -122,7 +124,7 @@ export class DialogBox {
       // Blink effect
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = this.textColor;
-        ctx.fillRect(cursorX, cursorY, 12, 20);
+        ctx.fillRect(cursorX, cursorY, 14, 24); // Was 12, 20
       }
     }
   }

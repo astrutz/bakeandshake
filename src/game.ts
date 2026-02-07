@@ -1,13 +1,17 @@
 import { Player } from './entities/Player';
 import { DialogBox } from './ui/DialogBox';
-import { PauseOverlay } from './ui/PauseOverlay';
+import { PauseMenu } from './ui/PauseMenu';
 import { CollisionSystem } from './physics/CollisionSystem';
 import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
+import { CoinManager } from './managers/CoinManager';
+import { XPManager } from './managers/XPManager';
+import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
 import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
+import { GameConfig } from './config/gameConfig';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -15,10 +19,12 @@ export class Game {
   private ctx: CanvasRenderingContext2D;
   private player: Player;
   private dialogBox: DialogBox;
-  private pauseOverlay: PauseOverlay;
+  private pauseMenu: PauseMenu;
   private collisionSystem: CollisionSystem;
   private debugRenderer: DebugRenderer;
   private npcManager: NPCManager;
+  private coinManager: CoinManager;
+  private xpManager: XPManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -31,8 +37,8 @@ export class Game {
   // Background map image
   private mapImage: HTMLImageElement | null = null;
   private mapLoaded: boolean = false;
-  private mapWidth: number = 2000;
-  private mapHeight: number = 1500;
+  private mapWidth: number = GameConfig.map.width;
+  private mapHeight: number = GameConfig.map.height;
 
   // Keyboard controls for dialog
   private keys: { [key: string]: boolean } = {};
@@ -51,18 +57,36 @@ export class Game {
     }
     this.ctx = context;
 
-    // Set fixed canvas resolution for pixel art
-    this.canvas.width = 1200;
-    this.canvas.height = 900;
+    // Disable image smoothing for crisp pixel art
+    this.ctx.imageSmoothingEnabled = false;
 
-    // Initialize player at center of screen
-    this.player = new Player(this.canvas.width / 2 - 25, this.canvas.height / 2 - 25, 50, 50);
+    // Set canvas resolution for 32x32 tiles (40×30 tiles = 1280×960)
+    this.canvas.width = GameConfig.canvas.width;
+    this.canvas.height = GameConfig.canvas.height;
+
+    console.log(
+      `Canvas: ${this.canvas.width}×${this.canvas.height} (${GameConfig.canvas.tilesX}×${GameConfig.canvas.tilesY} tiles of ${GameConfig.canvas.tileSize}px)`,
+    );
+
+    // Initialize player at center of screen (1 tile = 32×32)
+    this.player = new Player(
+      this.canvas.width / 2 - GameConfig.player.width / 2,
+      this.canvas.height / 2 - GameConfig.player.height / 2,
+      GameConfig.player.width,
+      GameConfig.player.height,
+    );
 
     // Initialize dialog box
     this.dialogBox = new DialogBox(soundManager);
 
-    // Initialize pause overlay
-    this.pauseOverlay = new PauseOverlay();
+    // Initialize pause menu
+    this.pauseMenu = new PauseMenu();
+
+    // Initialize coin manager
+    this.coinManager = new CoinManager(0);
+
+    // Initialize XP manager with level up callback
+    this.xpManager = new XPManager(0, 1, this.handleLevelUp.bind(this));
 
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
@@ -82,6 +106,31 @@ export class Game {
 
     // Setup keyboard controls for dialog
     this.setupKeyboardControls();
+
+    // Try to auto-load save on startup
+    this.tryAutoLoad();
+  }
+
+  private handleLevelUp(level: number, rewards?: { coins?: number; unlocks?: string[] }) {
+    console.log(`🎉 Reached level ${level}!`);
+
+    if (rewards) {
+      if (rewards.coins) {
+        this.coinManager.addCoins(rewards.coins);
+        console.log(`💰 Earned ${rewards.coins} coins!`);
+      }
+
+      if (rewards.unlocks) {
+        console.log(`🔓 Unlocked:`, rewards.unlocks.join(', '));
+        // TODO: Actually unlock features/recipes/etc
+      }
+    }
+  }
+
+  private tryAutoLoad() {
+    if (SaveManager.hasSave()) {
+      console.log('Save file detected. Press "Load Game" in pause menu to continue.');
+    }
   }
 
   private loadNPCs() {
@@ -111,15 +160,47 @@ export class Game {
       if (this.keys[e.key]) return; // Prevent repeat
       this.keys[e.key] = true;
 
-      // Toggle pause with P key
-      if (e.key === 'p' || e.key === 'P') {
-        this.pauseOverlay.toggle();
-        console.log(`Game ${this.pauseOverlay.isPausedState() ? 'paused' : 'resumed'}`);
+      // Add coins with C key (for testing)
+      if ((e.key === 'c' || e.key === 'C') && !this.pauseMenu.isPausedState()) {
+        this.coinManager.addCoins(10);
+        console.log(`Coins: ${this.coinManager.getCoins()}`);
+        return;
+      }
+
+      // Add XP with X key (for testing)
+      if ((e.key === 'x' || e.key === 'X') && !this.pauseMenu.isPausedState()) {
+        this.xpManager.addXP(25);
+        console.log(
+          `XP: ${this.xpManager.getCurrentXP()} | Level: ${this.xpManager.getCurrentLevel()}`,
+        );
+        return;
+      }
+
+      // Toggle pause with P or Escape key
+      if (
+        e.key === 'p' ||
+        e.key === 'P' ||
+        (e.key === 'Escape' && !this.dialogBox.getIsVisible())
+      ) {
+        this.pauseMenu.toggle();
+        console.log(`Game ${this.pauseMenu.isPausedState() ? 'paused' : 'resumed'}`);
+        return;
+      }
+
+      // Handle pause menu navigation
+      if (this.pauseMenu.isPausedState()) {
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          this.pauseMenu.moveSelectionUp();
+        } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          this.pauseMenu.moveSelectionDown();
+        } else if (e.key === 'Enter') {
+          this.handleMenuSelection();
+        }
         return;
       }
 
       // Don't process other keys if paused
-      if (this.pauseOverlay.isPausedState()) {
+      if (this.pauseMenu.isPausedState()) {
         return;
       }
 
@@ -149,6 +230,70 @@ export class Game {
     window.addEventListener('keyup', (e) => {
       this.keys[e.key] = false;
     });
+  }
+
+  private handleMenuSelection() {
+    const { action, close } = this.pauseMenu.selectOption();
+
+    switch (action) {
+      case 'resume':
+        this.pauseMenu.setPaused(false);
+        break;
+
+      case 'save':
+        this.saveGame();
+        break;
+
+      case 'load':
+        this.loadGame();
+        if (close) {
+          this.pauseMenu.setPaused(false);
+        }
+        break;
+
+      case 'delete':
+        this.deleteSave();
+        break;
+    }
+  }
+
+  private saveGame() {
+    const success = SaveManager.save({
+      playerX: this.player.x,
+      playerY: this.player.y,
+      coins: this.coinManager.getCoins(),
+      xp: this.xpManager.getCurrentXP(),
+      level: this.xpManager.getCurrentLevel(),
+    });
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Game saved successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to save game');
+    }
+  }
+
+  private loadGame() {
+    const saveData = SaveManager.load();
+
+    if (saveData) {
+      this.player.setPosition(saveData.playerX, saveData.playerY);
+      this.coinManager.setCoins(saveData.coins || 0);
+      this.xpManager.setXP(saveData.xp || 0, saveData.level || 1);
+      this.pauseMenu.showFeedback('✓ Game loaded successfully!');
+    } else {
+      this.pauseMenu.showFeedback('✗ No save data found');
+    }
+  }
+
+  private deleteSave() {
+    const success = SaveManager.deleteSave();
+
+    if (success) {
+      this.pauseMenu.showFeedback('✓ Save deleted');
+    } else {
+      this.pauseMenu.showFeedback('✗ Failed to delete save');
+    }
   }
 
   private handleInteraction() {
@@ -193,8 +338,17 @@ export class Game {
   }
 
   private update(deltaTime: number) {
+    // Update pause menu feedback timer
+    this.pauseMenu.update(deltaTime);
+
+    // Update coin animation
+    this.coinManager.update(deltaTime);
+
+    // Update XP bar animation
+    this.xpManager.update(deltaTime);
+
     // Don't update game state if paused
-    if (this.pauseOverlay.isPausedState()) {
+    if (this.pauseMenu.isPausedState()) {
       return;
     }
 
@@ -302,11 +456,24 @@ export class Game {
 
     this.ctx.restore();
 
+    // Render XP bar (bottom-left corner)
+    this.xpManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
-    // Render pause overlay (must be on top of everything)
-    this.pauseOverlay.render(this.ctx, this.canvas.width, this.canvas.height);
+    // Render coin display (top-right corner)
+    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Update pause menu with current stats
+    this.pauseMenu.setPlayerStats(
+      this.xpManager.getCurrentLevel(),
+      this.xpManager.getCurrentXP(),
+      this.coinManager.getCoins(),
+    );
+
+    // Render pause menu (must be on top of everything)
+    this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render debug info overlay
     this.debugRenderer.renderInfo(this.ctx, {
@@ -363,7 +530,15 @@ export class Game {
     return this.npcManager;
   }
 
-  public getPauseOverlay(): PauseOverlay {
-    return this.pauseOverlay;
+  public getPauseMenu(): PauseMenu {
+    return this.pauseMenu;
+  }
+
+  public getCoinManager(): CoinManager {
+    return this.coinManager;
+  }
+
+  public getXPManager(): XPManager {
+    return this.xpManager;
   }
 }

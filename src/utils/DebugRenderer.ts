@@ -1,5 +1,6 @@
 import { CollisionSystem } from '../physics/CollisionSystem';
 import { Player } from '../entities/Player';
+import { Colors, Fonts } from '../config/theme';
 
 export class DebugRenderer {
   private enabled: boolean = false;
@@ -27,7 +28,10 @@ export class DebugRenderer {
 
   private isTypingInInput(): boolean {
     const activeElement = document.activeElement;
-    return activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
+    return (
+      activeElement?.tagName === 'INPUT' ||
+      activeElement?.tagName === 'TEXTAREA'
+    );
   }
 
   public toggle() {
@@ -49,7 +53,7 @@ export class DebugRenderer {
   public renderCollisions(
     ctx: CanvasRenderingContext2D,
     collisionSystem: CollisionSystem,
-    color: string = 'rgba(255, 0, 0, 0.3)',
+    color: string = 'rgba(255, 0, 0, 0.3)'
   ) {
     if (!this.enabled) return;
     collisionSystem.renderDebug(ctx, color);
@@ -65,20 +69,20 @@ export class DebugRenderer {
       camera: { x: number; y: number };
       collisionCount: number;
       fps?: number;
-    },
+    }
   ) {
     if (!this.enabled) return;
 
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(5, 5, 250, 110);
+    ctx.fillRect(5, 5, 300, 140); // Increased size
 
-    ctx.fillStyle = '#00ff00';
-    ctx.font = '14px monospace';
+    ctx.fillStyle = Colors.green;
+    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was 14px
     ctx.textAlign = 'left';
 
-    let yPos = 25;
-    const lineHeight = 20;
+    let yPos = 28; // Was 25
+    const lineHeight = 24; // Was 20
 
     ctx.fillText(`Player: (${Math.round(data.player.x)}, ${Math.round(data.player.y)})`, 15, yPos);
     yPos += lineHeight;
@@ -109,7 +113,7 @@ export class DebugRenderer {
     y: number,
     width: number,
     height: number,
-    color: string = '#00ff00',
+    color: string = '#00ff00'
   ) {
     if (!this.enabled) return;
 
@@ -126,7 +130,7 @@ export class DebugRenderer {
     camera: { x: number; y: number },
     canvasWidth: number,
     canvasHeight: number,
-    gridSize: number = 100,
+    gridSize: number = 100
   ) {
     if (!this.enabled) return;
 
