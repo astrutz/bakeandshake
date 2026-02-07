@@ -22,7 +22,7 @@ import { NotificationManager } from './ui/NotificationManager.ts';
 import { MusicToggleButton } from './ui/MusicToggleButton.ts';
 import { MusicController } from './audio/MusicController.ts';
 import { ProximitySoundManager } from './audio/ProximitySoundManager.ts';
-import { NPC } from './entities/NPC.ts';
+import { type NPCConfig } from './entities/NPC.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -30,7 +30,7 @@ export class Game {
   private proximitySoundManager: ProximitySoundManager;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
-  private evilBox: NPC;
+  private evilBox: NPCConfig;
   private dialogBox: DialogBox;
   private pauseMenu: PauseMenu;
   private collisionSystem: CollisionSystem;
@@ -100,7 +100,7 @@ export class Game {
     this.player = new Player(500, 450, GameConfig.player.width, GameConfig.player.height);
 
     // Easter Egg
-    this.evilBox = new NPC({
+    this.evilBox = {
       id: 'evilBox',
       name: 'Olli',
       x: 974,
@@ -115,8 +115,7 @@ export class Game {
       dialogLines: ['Meow', 'Meow Meow ...', 'Meow', 'ICH HAB HUNGER'],
       framesPerDirection: 12,
       type: 'EVILBOX',
-    });
-    this.evilBox.isWalking = true;
+    } as NPCConfig;
 
     // Initialize dialog box
     this.dialogBox = new DialogBox(soundManager);
@@ -149,7 +148,7 @@ export class Game {
     // Initialize NPC manager and add NPCs
     this.npcManager = new NPCManager();
     this.loadNPCs();
-    this.npcManager.addNPC(this.evilBox);
+    this.npcManager.addNPC(this.evilBox).isWalking = true;
 
     // Register NPC collisions
     this.npcManager.registerCollisions(this.collisionSystem);
@@ -721,8 +720,6 @@ export class Game {
       customer.npc.updateAnimation(deltaTime);
     });
 
-    this.evilBox.updateAnimation(deltaTime);
-
     // Update dialog box
     this.dialogBox.update(deltaTime);
 
@@ -798,8 +795,6 @@ export class Game {
 
     // Render player
     this.player.render(this.ctx);
-
-    this.evilBox.render(this.ctx);
 
     // Render interaction prompts (must be after NPCs and player for proper layering)
     // Create a set of customer NPC IDs to exclude
