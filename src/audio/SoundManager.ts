@@ -39,4 +39,12 @@ export class SoundManager {
       audio.currentTime = 0;
     });
   }
+
+  public isPlaying(id: string): boolean {
+    const audio = this.effects.get(id);
+    if (!audio) {
+      return false;
+    }
+    return !audio.paused;
+  }
 }

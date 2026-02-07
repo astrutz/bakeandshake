@@ -1,3 +1,6 @@
+import { SOUND_IDS } from '../audio/SoundId.ts';
+import type { SoundManager } from '../audio/SoundManager.ts';
+
 export interface CollisionRect {
   x: number;
   y: number;
@@ -7,10 +10,16 @@ export interface CollisionRect {
 
 export class CollisionSystem {
   private collisionRects: CollisionRect[] = [];
+  private soundManager: SoundManager | null = null;
+  private lastCollisionTime: number = 0;
+  private readonly COLLISION_SOUND_COOLDOWN = 0.2;
 
-  constructor(collisionData?: CollisionRect[]) {
+  constructor(collisionData?: CollisionRect[], soundManager?: SoundManager) {
     if (collisionData) {
       this.collisionRects = collisionData;
+    }
+    if (soundManager) {
+      this.soundManager = soundManager;
     }
   }
 
@@ -55,6 +64,8 @@ export class CollisionSystem {
     if (!this.checkCollision(entity)) {
       return { x: newX, y: newY };
     }
+
+    this.playCollisionSound();
 
     // Try moving only horizontally
     const horizontalMove = { x: newX, y: currentY, width, height };
@@ -104,6 +115,17 @@ export class CollisionSystem {
       }));
 
     this.addCollisionRects(rects);
+  }
+
+  private playCollisionSound() {
+    const currentTime = Date.now() / 1000; // Convert to seconds
+
+    if (currentTime - this.lastCollisionTime >= this.COLLISION_SOUND_COOLDOWN) {
+      if (this.soundManager && !this.soundManager.isPlaying(SOUND_IDS.COLLISION)) {
+        this.soundManager.playSound(SOUND_IDS.COLLISION);
+      }
+      this.lastCollisionTime = currentTime;
+    }
   }
 
   /**

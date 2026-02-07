@@ -119,7 +119,7 @@ export class Game {
     );
 
     // Initialize collision system with test data
-    this.collisionSystem = new CollisionSystem([]);
+    this.collisionSystem = new CollisionSystem([], soundManager);
 
     // Initialize NPC manager and add NPCs
     this.npcManager = new NPCManager();

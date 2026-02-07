@@ -16,6 +16,7 @@ if (!canvas) {
 const soundManager = new SoundManager();
 
 // Sounds registrieren
+soundManager.registerSound(SOUND_IDS.COLLISION, '/audio/collision.mp3', { volume: 0.7 });
 soundManager.registerSound(SOUND_IDS.NPC_TALK, '/audio/npc-talk.mp3', { volume: 0.7 });
 // soundManager.registerSound(SOUND_IDS.NPC_BUY, '/audio/gehaltsverhandlungen.mp3', { volume: 0.6 });
 soundManager.registerSound(SOUND_IDS.BACKGROUND_WIND, '/audio/gehaltsverhandlungen.mp3', {
