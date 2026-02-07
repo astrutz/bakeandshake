@@ -16,6 +16,25 @@ export const testCollisions: CollisionRect[] = [
 ];
 
 /**
+ * Recursively search for a layer by name and type in nested layer structures
+ */
+function findLayer(layers: any[], name: string, type: string): any {
+  for (const layer of layers) {
+    // Check if this layer matches
+    if (layer.name === name && layer.type === type) {
+      return layer;
+    }
+
+    // If this layer is a group, recursively search its children
+    if (layer.type === 'group' && layer.layers) {
+      const found = findLayer(layer.layers, name, type);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
  * Load collision data from a Tiled JSON file
  * @param jsonPath - Path to the Tiled JSON export file
  * @returns Promise with collision rectangles
@@ -25,10 +44,8 @@ export async function loadCollisionsFromFile(jsonPath: string): Promise<Collisio
     const response = await fetch(jsonPath);
     const tiledData = await response.json();
 
-    // Find the collision object layer
-    const collisionLayer = tiledData.layers.find(
-      (layer: any) => layer.name === 'Collision' && layer.type === 'objectgroup',
-    );
+    // Find the collision object layer (supporting nested groups)
+    const collisionLayer = findLayer(tiledData.layers, 'Collision', 'objectgroup');
 
     if (collisionLayer && collisionLayer.objects) {
       const rects: CollisionRect[] = collisionLayer.objects
@@ -40,14 +57,15 @@ export async function loadCollisionsFromFile(jsonPath: string): Promise<Collisio
           height: obj.height,
         }));
 
-      console.log(`Loaded ${rects.length} collision objects from ${jsonPath}`);
+      console.log(`✅ Loaded ${rects.length} collision objects from ${jsonPath}`);
       return rects;
     }
 
-    console.warn(`No collision layer found in ${jsonPath}`);
+    console.warn(`⚠️ No collision layer found in ${jsonPath}`);
+    console.log('Available layers:', tiledData.layers.map((l: any) => ({ name: l.name, type: l.type })));
     return [];
   } catch (error) {
-    console.error(`Failed to load collision data from ${jsonPath}:`, error);
+    console.error(`❌ Failed to load collision data from ${jsonPath}:`, error);
     return [];
   }
 }

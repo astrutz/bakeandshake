@@ -113,7 +113,7 @@ export class Game {
     );
 
     // Initialize collision system with test data
-    this.collisionSystem = new CollisionSystem(testCollisions);
+    this.collisionSystem = new CollisionSystem([]);
 
     // Initialize NPC manager and add NPCs
     this.npcManager = new NPCManager();
@@ -167,8 +167,6 @@ export class Game {
 
   private handleCustomerVisibilityChange() {
     // Rebuild collisions when customer visibility changes
-    this.collisionSystem.clearCollisionRects();
-    this.collisionSystem.addCollisionRects(testCollisions);
     this.npcManager.updateCollisions();
   }
 
@@ -284,6 +282,7 @@ export class Game {
       this.collisionSystem.addCollisionRects(collisions);
       // Re-register NPC collisions
       this.npcManager.registerCollisions(this.collisionSystem);
+      this.npcManager.updateCollisions();
     }
   }
 

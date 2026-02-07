@@ -27,7 +27,7 @@ soundManager.registerSound(SOUND_IDS.BACKGROUND_COFFEE, '/audio/coffee-ambience-
 
 // Initialize the game
 const game = new Game(canvas, soundManager);
-await game.loadCollisionsFromTiled('/map/bakery.json');
+await game.loadCollisionsFromTiled('/map/bakery.tmj');
 
 const ambientManager = new AmbientAudioManager(
   ['/audio/Frische_Brötchen_warme_Herzen.mp3', '/audio/Frische_Brötchen_warme_Herzen_2.mp3'],
