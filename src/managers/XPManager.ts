@@ -111,14 +111,15 @@ export class XPManager {
     }
   }
 
-  public render(ctx: CanvasRenderingContext2D, canvasHeight: number) {
+  public render(ctx: CanvasRenderingContext2D, canvasHeight: number, gameLevel: number) {
     ctx.save();
 
     // Position at bottom-left corner
     const x = 24;
     const barWidth = 300;
-    const barHeight = 24; // Reduced from 32
+    const barHeight = 24;
     const labelGap = 10;
+    const padding = 4;
     const labelHeight = barHeight;
     const y = canvasHeight - 24 - labelHeight - labelGap;
 
@@ -128,7 +129,7 @@ export class XPManager {
     const badgeY = y - barHeight / 2;
 
     // Level label above the XP bar
-    const levelLabel = `Level ${this.currentLevel}`;
+    const levelLabel = `Level ${gameLevel}`;
     ctx.font = `bold ${Fonts.sizes.large} ${Fonts.body}`;
     const labelWidth = barWidth;
     const labelX = x;
@@ -195,13 +196,16 @@ export class XPManager {
     ctx.strokeRect(x, y - barHeight, barWidth, barHeight);
 
     // XP bar fill (progress) - behind the text
-    const fillWidth = (barWidth * 2) * this.barFillProgress;
-    const gradient = ctx.createLinearGradient(x, 0, x + fillWidth, 0);
+    const fillWidth = Math.min(
+      barWidth - padding * 2,
+      (barWidth - padding * 2) * this.barFillProgress,
+    );
+    const gradient = ctx.createLinearGradient(x + padding, 0, x + padding + fillWidth, 0);
     gradient.addColorStop(0, Colors.gold);
     gradient.addColorStop(1, Colors.darkGold);
 
     ctx.fillStyle = gradient;
-    ctx.fillRect(x, y - barHeight, fillWidth, barHeight * 2);
+    ctx.fillRect(x + padding, y - barHeight + padding, fillWidth, barHeight - padding * 2);
 
     // XP text - rendered on top of the bar
     const currentLevelData = getLevelData(this.currentLevel);

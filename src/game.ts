@@ -755,7 +755,7 @@ export class Game {
     this.ctx.restore();
 
     // Render XP bar (bottom-left corner)
-    this.xpManager.render(this.ctx, this.canvas.height);
+    this.xpManager.render(this.ctx, this.canvas.height, this.currentLevel);
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
