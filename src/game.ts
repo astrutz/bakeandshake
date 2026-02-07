@@ -741,11 +741,12 @@ export class Game {
     // Render customer-specific interaction prompts
     this.customerManager.renderInteractionPrompts(this.ctx, this.player, this.inventoryManager);
 
+    // Render inventory (top-left corner)
+    this.inventoryManager.render(this.ctx);
+
     // Render baking interaction prompt
     this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
 
-    // Render inventory (top-left corner)
-    this.inventoryManager.render(this.ctx);
 
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(
