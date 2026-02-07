@@ -480,8 +480,6 @@ export class Game {
         );
         if (wantsSave) {
           this.saveGame();
-        } else {
-          break;
         }
         this.pauseMenu.setPaused(false);
         window.dispatchEvent(new CustomEvent('open-main-menu'));

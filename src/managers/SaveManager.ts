@@ -47,7 +47,7 @@ export class SaveManager {
       const saveData: SaveData = JSON.parse(savedJson);
 
       // Validate save data
-      if (!saveData.playerX || !saveData.playerY) {
+      if (!SaveManager.isValidSaveData(saveData)) {
         console.warn('Invalid save data');
         return null;
       }
@@ -64,7 +64,14 @@ export class SaveManager {
    * Check if a save exists
    */
   public static hasSave(): boolean {
-    return localStorage.getItem(SaveManager.SAVE_KEY) !== null;
+    const savedJson = localStorage.getItem(SaveManager.SAVE_KEY);
+    if (!savedJson) return false;
+    try {
+      const saveData: SaveData = JSON.parse(savedJson);
+      return SaveManager.isValidSaveData(saveData);
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -93,6 +100,9 @@ export class SaveManager {
 
     try {
       const saveData: SaveData = JSON.parse(savedJson);
+      if (!SaveManager.isValidSaveData(saveData)) {
+        return { exists: false };
+      }
       const timeSince = SaveManager.formatTimeSince(saveData.timestamp);
 
       return {
@@ -115,5 +125,17 @@ export class SaveManager {
     if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
     return `${Math.floor(seconds / 86400)} days ago`;
+  }
+
+  private static isValidSaveData(saveData: SaveData): boolean {
+    return (
+      Number.isFinite(saveData.playerX) &&
+      Number.isFinite(saveData.playerY) &&
+      Number.isFinite(saveData.coins) &&
+      Number.isFinite(saveData.xp) &&
+      Number.isFinite(saveData.level) &&
+      Number.isFinite(saveData.timestamp) &&
+      saveData.version.length > 0
+    );
   }
 }
