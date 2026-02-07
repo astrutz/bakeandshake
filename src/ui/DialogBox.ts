@@ -12,7 +12,7 @@ export class DialogBox {
   private timeSinceLastChar: number = 0;
   private isComplete: boolean = false;
 
-  // Box styling (scaled for 1280x960)
+  // Box styling (scaled for 1024x768)
   private padding: number = UI.padding.medium;
   private boxHeight: number = 180; // Was 150
   private borderWidth: number = UI.borderWidth.thick;

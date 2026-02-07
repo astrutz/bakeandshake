@@ -22,6 +22,7 @@ export class NPC {
   public height: number;
   public dialogLines: string[];
   public interactionRadius: number;
+  public hidden: boolean = false;
 
   private sprite: HTMLImageElement | null = null;
   private spriteLoaded: boolean = false;
@@ -70,7 +71,7 @@ export class NPC {
       // Draw name label
       ctx.save();
       ctx.fillStyle = Colors.white;
-      ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
+      ctx.font = `${Fonts.sizes.small} ${Fonts.body}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillText(this.name, this.x + this.width / 2, this.y - 6);
@@ -83,11 +84,11 @@ export class NPC {
 
     // Draw "Press E" prompt above NPC
     const promptX = this.x + this.width / 2;
-    const promptY = this.y - 40; // Was 36
+    const promptY = this.y - 40;
 
     // Background (larger box)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(promptX - 50, promptY - 20, 100, 28); // Was 42, 18, 84, 24
+    ctx.fillRect(promptX - 50, promptY - 20, 100, 28);
 
     // Border
     ctx.strokeStyle = Colors.moccasin;
@@ -96,7 +97,7 @@ export class NPC {
 
     // Text (larger font)
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`; // Was tiny (14px), now 18px
+    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('Press E', promptX, promptY - 6);
@@ -138,7 +139,7 @@ export class NPC {
     playerX: number,
     playerY: number,
     playerWidth: number,
-    playerHeight: number
+    playerHeight: number,
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;
