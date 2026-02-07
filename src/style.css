@@ -69,6 +69,7 @@ h1 {
   border: 8px solid #d2691e;
   pointer-events: auto;
   background: transparent;
+  outline: none;
 }
 
 
