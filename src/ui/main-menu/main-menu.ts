@@ -70,7 +70,7 @@ export function createMainMenu(actions: MainMenuActions) {
     const layout = getMenuLayout(width, height);
 
     context.clearRect(0, 0, width, height);
-    drawBackground(context, width, height, images.mapImage, images.mapReadyRef.value);
+    dramMapImage(context, width, height, images.mapImage, images.mapReadyRef.value);
     drawPanel(context, layout);
     drawPanelBackground(context, layout, images.backgroundImage, images.imageReadyRef.value);
     drawTitle(context, layout, width);
@@ -198,7 +198,7 @@ function getMenuLayout(width: number, height: number): MenuLayout {
   };
 }
 
-function drawBackground(
+function dramMapImage(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
@@ -207,7 +207,11 @@ function drawBackground(
 ) {
   if (mapReady) {
     drawCoverImage(context, mapImage, width, height, 0, 0);
-    context.fillStyle = 'rgba(11, 8, 6, 0.25)';
+    context.save();
+    context.filter = 'blur(2px)';
+    context.drawImage(context.canvas, 0, 0);
+    context.restore();
+    context.fillStyle = 'rgba(11, 8, 6, 0.6)';
     context.fillRect(0, 0, width, height);
   } else {
     context.fillStyle = '#3d1f11';
