@@ -128,8 +128,12 @@ export class NPCManager {
   /**
    * Render interaction prompts for nearby NPCs
    */
-  public renderInteractionPrompts(ctx: CanvasRenderingContext2D) {
+  public renderInteractionPrompts(ctx: CanvasRenderingContext2D, excludeNPCs?: Set<string>) {
     if (this.nearbyNPC && !this.nearbyNPC.hidden) {
+      // Skip if this NPC is in the exclude list
+      if (excludeNPCs && excludeNPCs.has(this.nearbyNPC.id)) {
+        return;
+      }
       this.nearbyNPC.renderInteractionPrompt(ctx);
     }
   }

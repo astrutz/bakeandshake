@@ -170,6 +170,13 @@ const level2Flow: CustomerFlowLevelWithPaths = {
           width: 32,
           height: 32,
         },
+        spritePath: '/sprites/customer2.png',
+        spriteSheet: {
+          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          col: 0,  // Column 1 (0-indexed, so col 0 = first column)
+          width: 32,
+          height: 32,
+        },
         dialogLines: [
           'Good day! I need 3 loaves of bread for my family.',
           'Perfect! My family will love these!',

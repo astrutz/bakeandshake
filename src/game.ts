@@ -15,7 +15,12 @@ import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
+import { UI } from './config/theme';
 import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
+import { BakingManager } from './managers/BakingManager';
+import { NotificationManager } from './ui/NotificationManager.ts';
+import { MusicToggleButton } from './ui/MusicToggleButton.ts';
+import { MusicController } from './audio/MusicController.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -34,6 +39,10 @@ export class Game {
   private levelCompleteScreen: LevelCompleteScreen;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
+  private bakingManager: BakingManager;
+  private notificationManager: NotificationManager;
+  private musicController: MusicController;
+  private musicToggleButton: MusicToggleButton;
 
   // Camera/viewport for the map
   private camera = {
@@ -58,9 +67,10 @@ export class Game {
   // Current level
   private currentLevel: number = 1;
 
-  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
+  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager, musicController: MusicController) {
     this.canvas = canvas;
     this.soundManager = soundManager;
+    this.musicController = musicController;
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Failed to get 2D context');
@@ -80,8 +90,8 @@ export class Game {
 
     // Initialize player at center of screen (1 tile = 32×32)
     this.player = new Player(
-      this.canvas.width / 2 - GameConfig.player.width / 2,
-      this.canvas.height / 2 - GameConfig.player.height / 2,
+      500,
+      450,
       GameConfig.player.width,
       GameConfig.player.height,
     );
@@ -109,7 +119,7 @@ export class Game {
     );
 
     // Initialize collision system with test data
-    this.collisionSystem = new CollisionSystem(testCollisions);
+    this.collisionSystem = new CollisionSystem([]);
 
     // Initialize NPC manager and add NPCs
     this.npcManager = new NPCManager();
@@ -124,11 +134,26 @@ export class Game {
     // Initialize level complete screen
     this.levelCompleteScreen = new LevelCompleteScreen();
 
+    // Initialize notification manager
+    this.notificationManager = new NotificationManager();
+
+    // Initialize baking manager
+    this.bakingManager = new BakingManager(this.notificationManager, this.inventoryManager);
+
+    // Initialize music toggle button
+    this.musicToggleButton = new MusicToggleButton(
+      () => this.musicController.isEnabled(),
+      () => this.musicController.toggle(),
+    );
+
     // Load the background map image
     this.loadMapImage();
 
     // Setup keyboard controls for dialog
     this.setupKeyboardControls();
+
+    // Setup pointer controls for HUD
+    this.setupPointerControls();
 
     // Try to auto-load save on startup
     this.tryAutoLoad();
@@ -233,8 +258,6 @@ export class Game {
 
   private handleCustomerVisibilityChange() {
     // Rebuild collisions when customer visibility changes
-    this.collisionSystem.clearCollisionRects();
-    this.collisionSystem.addCollisionRects(testCollisions);
     this.npcManager.updateCollisions();
   }
 
@@ -350,6 +373,7 @@ export class Game {
       this.collisionSystem.addCollisionRects(collisions);
       // Re-register NPC collisions
       this.npcManager.registerCollisions(this.collisionSystem);
+      this.npcManager.updateCollisions();
     }
   }
 
@@ -357,6 +381,11 @@ export class Game {
     window.addEventListener('keydown', (e) => {
       if (this.keys[e.key]) return; // Prevent repeat
       this.keys[e.key] = true;
+
+      if (e.key === 'm' || e.key === 'M') {
+        this.musicController.toggle();
+        return;
+      }
 
       // Add coins with C key (for testing)
       if ((e.key === 'c' || e.key === 'C') && !this.pauseMenu.isPausedState()) {
@@ -374,27 +403,33 @@ export class Game {
         return;
       }
 
-      // Add bread to inventory with B key (for testing)
+      // Baking process with B key
       if ((e.key === 'b' || e.key === 'B') && !this.pauseMenu.isPausedState()) {
-        this.inventoryManager.addItem('bread', 1);
+        this.bakingManager.handleBakingAction(this.player);
         return;
       }
 
-      // Complete current order with O key (for testing)
+      // Update the O key handler to consume bread from baking manager:
+      // In setupKeyboardControls, find the O key handler and update it:
       if ((e.key === 'o' || e.key === 'O') && !this.pauseMenu.isPausedState()) {
-        // Check if we're near any customer right now
         const nearbyCustomer = this.customerManager.getNearbyCustomer(this.player);
 
         if (nearbyCustomer) {
           const order = nearbyCustomer.order;
           if (this.inventoryManager.hasItem(order.item, order.quantity)) {
             this.inventoryManager.removeItem(order.item, order.quantity);
+
+            // REMOVE THIS SECTION:
+            // if (order.item === 'bread') {
+            //   this.bakingManager.consumeBread();
+            // }
+
             this.customerManager.completeOrder(order.customerId);
-            // Show thank you dialog
             this.dialogBox.show(nearbyCustomer.npc.getNextDialog());
             this.player.setMovementLocked(true);
           } else {
             console.log(`Not enough ${order.item}! Need ${order.quantity}`);
+            this.notificationManager.showNotification(`❌ Not enough ${order.item}!`);
           }
         } else {
           console.log('No customer nearby to deliver to!');
@@ -470,7 +505,28 @@ export class Game {
     });
   }
 
-  private handleMenuSelection() {
+  private setupPointerControls() {
+    this.canvas.addEventListener('mousemove', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+      const hit = this.musicToggleButton.hitTest(x, y);
+      this.canvas.style.cursor = hit ? 'pointer' : 'default';
+    });
+
+    this.canvas.addEventListener('click', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+      this.musicToggleButton.handleClick(x, y);
+    });
+  }
+
+  private async handleMenuSelection() {
     const { action, close } = this.pauseMenu.selectOption();
 
     switch (action) {
@@ -492,6 +548,21 @@ export class Game {
       case 'delete':
         this.deleteSave();
         break;
+
+      case 'main_menu': {
+        // TODO Make hübsch dialog
+        const wantsSave = window.confirm(
+          'Do you want to save before returning to the main menu? Unsaved progress will be lost.',
+        );
+        if (wantsSave) {
+          this.saveGame();
+        } else {
+          break;
+        }
+        this.pauseMenu.setPaused(false);
+        window.dispatchEvent(new CustomEvent('open-main-menu'));
+        break;
+      }
     }
   }
 
@@ -595,9 +666,24 @@ export class Game {
     // Update level complete screen animation
     this.levelCompleteScreen.update(deltaTime);
 
+    // Update notification manager
+    this.notificationManager.update();
+
     // Don't update game state if paused
     if (this.pauseMenu.isPausedState() || this.levelCompleteScreen.isVisibleState()) {
       return;
+    }
+
+    // Update baking manager
+    const breadReady = this.bakingManager.update(deltaTime);
+    if (breadReady) {
+      // Try to add bread to inventory when baking completes
+      const added = this.inventoryManager.addItem('bread', 1);
+      if (!added) {
+        // This shouldn't happen as we check before starting, but just in case
+        this.notificationManager.showNotification('❌ Inventory full! Bread wasted!', 3);
+        this.bakingManager.reset(); // Reset baking state
+      }
     }
 
     // Update customer manager (independent of serving)
@@ -689,11 +775,33 @@ export class Game {
     // Render NPCs
     this.npcManager.render(this.ctx);
 
+    // Render baking progress bar (if baking)
+    this.bakingManager.renderBakingProgress(this.ctx, this.canvas.height);
+
+    // Render glowing highlight on active zone
+    this.bakingManager.renderActiveZoneHighlight(this.ctx);
+
+    // Render notifications
+    this.notificationManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render inventory (top-left corner)
+    this.inventoryManager.render(this.ctx);
+
     // Render player
     this.player.render(this.ctx);
 
     // Render interaction prompts (must be after NPCs and player for proper layering)
-    this.npcManager.renderInteractionPrompts(this.ctx);
+    // Create a set of customer NPC IDs to exclude
+    const customerNPCIds = new Set(
+      this.customerManager.getActiveCustomers().map(c => c.npc.id)
+    );
+    this.npcManager.renderInteractionPrompts(this.ctx, customerNPCIds);
+
+    // Render customer-specific interaction prompts
+    this.customerManager.renderInteractionPrompts(this.ctx, this.player, this.inventoryManager);
+
+    // Render baking interaction prompt
+    this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
 
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(
@@ -713,8 +821,22 @@ export class Game {
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
-    // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width);
+    // Render music toggle in the top-right corner
+    const coinHudDefault = this.coinManager.getHudBoxRect(this.ctx, this.canvas.width);
+    const buttonSize = coinHudDefault.height;
+    const gap = UI.padding.small;
+    const buttonRight = this.canvas.width - 24;
+    this.musicToggleButton.setBounds({
+      x: buttonRight - buttonSize,
+      y: coinHudDefault.y + (coinHudDefault.height - buttonSize) / 2,
+      width: buttonSize,
+      height: buttonSize,
+    });
+    this.musicToggleButton.render(this.ctx);
+
+    // Render coin display to the left of the music toggle
+    const coinsRight = buttonRight - buttonSize - gap;
+    this.coinManager.renderAtRight(this.ctx, coinsRight);
 
     // Update pause menu with current stats
     this.pauseMenu.setPlayerStats(
@@ -725,6 +847,9 @@ export class Game {
 
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render level complete screen (should be on top of pause menu)
+    this.levelCompleteScreen.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render debug info overlay
     this.debugRenderer.renderInfo(this.ctx, {

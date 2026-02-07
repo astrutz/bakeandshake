@@ -14,7 +14,7 @@ export class DialogBox {
 
   // Box styling (scaled for 1024x768)
   private padding: number = UI.padding.medium;
-  private boxHeight: number = 180; // Was 150
+  private boxHeight: number = 180;
   private borderWidth: number = UI.borderWidth.thick;
 
   // Colors
@@ -94,19 +94,22 @@ export class DialogBox {
       boxX + this.borderWidth,
       boxY + this.borderWidth,
       boxWidth - this.borderWidth * 2,
-      this.boxHeight - this.borderWidth * 2
+      this.boxHeight - this.borderWidth * 2,
     );
+
+    ctx.save();
 
     // Draw text
     ctx.fillStyle = this.textColor;
     ctx.font = `${Fonts.sizes.medium} ${Fonts.monospace}`;
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
     // Word wrap the text
     const maxWidth = boxWidth - this.padding * 2 - this.borderWidth * 2;
     const lines = this.wrapText(ctx, this.displayedText, maxWidth);
 
-    const lineHeight = 32; // Was 28
+    const lineHeight = 32;
     const textX = boxX + this.padding + this.borderWidth;
     const textY = boxY + this.padding + this.borderWidth;
 
@@ -124,9 +127,11 @@ export class DialogBox {
       // Blink effect
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = this.textColor;
-        ctx.fillRect(cursorX, cursorY, 14, 24); // Was 12, 20
+        ctx.fillRect(cursorX, cursorY, 14, 24);
       }
     }
+
+    ctx.restore();
   }
 
   private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {

@@ -240,21 +240,30 @@ export class NPC {
   public renderInteractionPrompt(ctx: CanvasRenderingContext2D) {
     ctx.save();
 
+    const promptText = 'Press E to talk';
     const promptX = this.x + this.width / 2;
     const promptY = this.y - 40;
 
+    // Measure text to calculate proper width
+    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
+    const textWidth = ctx.measureText(promptText).width;
+    const padding = 20; // Padding on each side
+    const boxWidth = textWidth + (padding * 2);
+    const boxHeight = 28;
+
+    // Background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(promptX - 50, promptY - 20, 100, 28);
+    ctx.fillRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
 
     ctx.strokeStyle = Colors.moccasin;
     ctx.lineWidth = 2;
-    ctx.strokeRect(promptX - 50, promptY - 20, 100, 28);
+    ctx.strokeRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
 
+    // Text
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Press E', promptX, promptY - 6);
+    ctx.fillText(promptText, promptX, promptY - 6);
 
     ctx.restore();
   }

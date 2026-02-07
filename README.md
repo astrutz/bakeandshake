@@ -32,10 +32,18 @@ npm run build
 | `Space` or `Enter` | Skip dialog typing / Close dialog when complete |
 | `Escape` | Close dialog immediately |
 
-### Game Controls
+### Baking & Serving
 | Key | Action |
 |-----|--------|
-| `P` | Pause/Resume game |
+| `B` | Baking workflow (context-sensitive) |
+| `O` | Deliver order to nearby customer |
+
+
+### Game Controls
+| Key             | Action              |
+|-----------------|---------------------|
+| `P` or `Escape` | Pause/Resume game   |
+| `M`             | Start or stop music |
 
 ### Debug
 | Key | Action |

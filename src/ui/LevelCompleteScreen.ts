@@ -68,8 +68,8 @@ export class LevelCompleteScreen {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     // Panel dimensions
-    const panelWidth = 500;
-    const panelHeight = 450;
+    const panelWidth = 600;
+    const panelHeight = 600;
     const panelX = (canvasWidth - panelWidth) / 2;
     const panelY = canvasHeight * (1 - easeProgress) - panelHeight / 2 + canvasHeight / 2;
 
@@ -91,8 +91,8 @@ export class LevelCompleteScreen {
     ctx.textAlign = 'center';
 
     // Title
-    ctx.fillStyle = Colors.gold;
-    ctx.font = `bold 48px ${Fonts.heading}`;
+    ctx.fillStyle = Colors.chocolate;
+    ctx.font = `bold 48px ${Fonts.body}`;
     ctx.fillText('🎉 Level Complete! 🎉', canvasWidth / 2, panelY + 70);
 
     // Stats section
@@ -100,7 +100,7 @@ export class LevelCompleteScreen {
     const lineHeight = 45;
 
     ctx.font = `${Fonts.sizes.medium} ${Fonts.body}`;
-    ctx.fillStyle = Colors.white;
+    ctx.fillStyle = Colors.black;
 
     // Level number
     ctx.fillText(`Level ${this.stats.level}`, canvasWidth / 2, statsY);
@@ -119,7 +119,7 @@ export class LevelCompleteScreen {
     );
 
     // Coins earned
-    ctx.fillStyle = Colors.gold;
+    ctx.fillStyle = Colors.black;
     ctx.fillText(
       `💰 Coins Earned: ${this.stats.coinsEarned}`,
       canvasWidth / 2,
@@ -127,7 +127,7 @@ export class LevelCompleteScreen {
     );
 
     // Player level
-    ctx.fillStyle = Colors.white;
+    ctx.fillStyle = Colors.black;
     ctx.fillText(
       `⭐ Player Level: ${this.stats.currentLevel}`,
       canvasWidth / 2,
@@ -143,22 +143,12 @@ export class LevelCompleteScreen {
       const optionY = optionsY + index * 50;
 
       if (isSelected) {
-        // Selected option background
-        ctx.fillStyle = Colors.gold;
-        const textWidth = ctx.measureText(option).width;
-        ctx.fillRect(
-          canvasWidth / 2 - textWidth / 2 - 20,
-          optionY - 28,
-          textWidth + 40,
-          40,
-        );
-
         // Selected text
-        ctx.fillStyle = Colors.wheat;
+        ctx.fillStyle = Colors.black;
         ctx.fillText(`▶ ${option} ◀`, canvasWidth / 2, optionY);
       } else {
         // Unselected text
-        ctx.fillStyle = Colors.moccasin;
+        ctx.fillStyle = Colors.black;
         ctx.fillText(option, canvasWidth / 2, optionY);
       }
     });
