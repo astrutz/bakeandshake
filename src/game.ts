@@ -728,9 +728,6 @@ export class Game {
     // Render notifications
     this.notificationManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
-    // Render inventory (top-left corner)
-    this.inventoryManager.render(this.ctx);
-
     // Render player
     this.player.render(this.ctx);
 
@@ -746,6 +743,9 @@ export class Game {
 
     // Render baking interaction prompt
     this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
+
+    // Render inventory (top-left corner)
+    this.inventoryManager.render(this.ctx);
 
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(
