@@ -28,10 +28,7 @@ export class DebugRenderer {
 
   private isTypingInInput(): boolean {
     const activeElement = document.activeElement;
-    return (
-      activeElement?.tagName === 'INPUT' ||
-      activeElement?.tagName === 'TEXTAREA'
-    );
+    return activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA';
   }
 
   public toggle() {
@@ -53,7 +50,7 @@ export class DebugRenderer {
   public renderCollisions(
     ctx: CanvasRenderingContext2D,
     collisionSystem: CollisionSystem,
-    color: string = 'rgba(255, 0, 0, 0.3)'
+    color: string = 'rgba(255, 0, 0, 0.3)',
   ) {
     if (!this.enabled) return;
     collisionSystem.renderDebug(ctx, color);
@@ -71,7 +68,7 @@ export class DebugRenderer {
       fps?: number;
       level?: number;
       progress?: string;
-    }
+    },
   ) {
     if (!this.enabled) return;
 
@@ -115,13 +112,57 @@ export class DebugRenderer {
     y: number,
     width: number,
     height: number,
-    color: string = '#00ff00'
+    color: string = '#00ff00',
   ) {
     if (!this.enabled) return;
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, width, height);
+  }
+
+  /**
+   * Rendert einen Punkt mit einem umgebenden transparenten Radius (Kreis).
+   * @param ctx Der Canvas-Rendering-Kontext
+   * @param x X-Koordinate
+   * @param y Y-Koordinate
+   * @param radius Der Radius des äußeren Kreises
+   * @param color Die Basisfarbe (z.B. 'red' oder '#ff0000')
+   * @param pointSize Die Größe des inneren Punktes (Standard: 4)
+   */
+  public renderPointWithRadius(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+    color: string = '#ff0000',
+    pointSize: number = 4,
+  ) {
+    if (!this.enabled) return;
+
+    ctx.save();
+
+    // 1. Äußerer transparenter Kreis (Radius)
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.globalAlpha = 0.2; // Stark durchsichtig
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Optional: Eine feine Linie um den Radius
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 2. Innerer Punkt
+    ctx.globalAlpha = 1.0; // Voll sichtbar
+    ctx.beginPath();
+    ctx.arc(x, y, pointSize, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.restore();
   }
 
   /**
@@ -132,7 +173,7 @@ export class DebugRenderer {
     camera: { x: number; y: number },
     canvasWidth: number,
     canvasHeight: number,
-    gridSize: number = 100
+    gridSize: number = 100,
   ) {
     if (!this.enabled) return;
 
