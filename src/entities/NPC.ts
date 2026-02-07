@@ -9,6 +9,12 @@ export interface NPCConfig {
   width?: number;
   height?: number;
   spritePath?: string;
+  spriteSheet?: {
+    row: number;      // Which row in the sprite sheet
+    col: number;      // Which column in the sprite sheet
+    width: number;    // Width of each sprite frame
+    height: number;   // Height of each sprite frame
+  };
   dialogLines: string[];
   interactionRadius?: number;
 }
@@ -28,6 +34,9 @@ export class NPC {
   private spriteLoaded: boolean = false;
   private currentDialogIndex: number = 0;
 
+  // Sprite sheet properties
+  private spriteSheetConfig: NPCConfig['spriteSheet'] | null = null;
+
   constructor(config: NPCConfig) {
     this.id = config.id;
     this.name = config.name;
@@ -39,6 +48,7 @@ export class NPC {
     this.interactionRadius = config.interactionRadius || GameConfig.npc.defaultInteractionRadius;
 
     if (config.spritePath) {
+      this.spriteSheetConfig = config.spriteSheet || null;
       this.loadSprite(config.spritePath);
     }
   }
@@ -58,7 +68,27 @@ export class NPC {
 
   public render(ctx: CanvasRenderingContext2D) {
     if (this.spriteLoaded && this.sprite) {
-      ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+      if (this.spriteSheetConfig) {
+        // Draw from sprite sheet
+        const { row, col, width, height } = this.spriteSheetConfig;
+        const sourceX = col * width;
+        const sourceY = row * height;
+
+        ctx.drawImage(
+          this.sprite,
+          sourceX,
+          sourceY,
+          width,
+          height,
+          this.x,
+          this.y,
+          this.width,
+          this.height
+        );
+      } else {
+        // Draw full sprite
+        ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+      }
     } else {
       // Fallback: Draw a colored rectangle
       ctx.fillStyle = Colors.orange;
@@ -142,6 +172,13 @@ export class NPC {
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;
-    return this.isInRange(playerCenterX, playerCenterY);
+    const npcCenterX = this.x + this.width / 2;
+    const npcCenterY = this.y + this.height / 2;
+
+    const distance = Math.sqrt(
+      Math.pow(playerCenterX - npcCenterX, 2) + Math.pow(playerCenterY - npcCenterY, 2),
+    );
+
+    return distance <= this.interactionRadius;
   }
 }

@@ -22,7 +22,14 @@ const level1Flow: CustomerFlowLevel = {
         id: 'customer_1',
         name: 'Mrs. Baker',
         x: 600,
-        y: 400,
+        y: 450,
+        spritePath: '/sprites/customer1.png',
+        spriteSheet: {
+          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          col: 0,  // Column 1 (0-indexed, so col 0 = first column)
+          width: 32,
+          height: 32,
+        },
         dialogLines: [
           'Hello! I would like to buy 2 loaves of bread please.',
           'Thank you! These look delicious!',
@@ -51,7 +58,14 @@ const level2Flow: CustomerFlowLevel = {
         id: 'customer_1',
         name: 'Mrs. Baker',
         x: 600,
-        y: 400,
+        y: 450,
+        spritePath: '/sprites/customer1.png',
+        spriteSheet: {
+          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          col: 0,  // Column 1 (0-indexed, so col 0 = first column)
+          width: 32,
+          height: 32,
+        },
         dialogLines: [
           'Hello! I would like to buy 2 loaves of bread please.',
           'Thank you! These look delicious!',
@@ -75,6 +89,13 @@ const level2Flow: CustomerFlowLevel = {
         name: 'Mr. Smith',
         x: 650,
         y: 450,
+        spritePath: '/sprites/customer2.png',
+        spriteSheet: {
+          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          col: 0,  // Column 1 (0-indexed, so col 0 = first column)
+          width: 32,
+          height: 32,
+        },
         dialogLines: [
           'Good day! I need 3 loaves of bread for my family.',
           'Perfect! My family will love these!',
@@ -97,7 +118,14 @@ const level2Flow: CustomerFlowLevel = {
         id: 'customer_3',
         name: 'Little Timmy',
         x: 700,
-        y: 500,
+        y: 450,
+        spritePath: '/sprites/customer3.png',
+        spriteSheet: {
+          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          col: 0,  // Column 1 (0-indexed, so col 0 = first column)
+          width: 32,
+          height: 32,
+        },
         dialogLines: [
           'Hi! My mom sent me to get 5 loaves of bread!',
           'Wow! Thanks! This smells amazing!',
