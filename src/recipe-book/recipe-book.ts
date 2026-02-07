@@ -257,6 +257,8 @@ export function initRecipeBookOverview() {
     overlay.classList.add('is-closing');
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden', 'true');
+    currentIndex = 0;
+    updatePages();
     window.setTimeout(() => {
       overlay.classList.remove('is-closing');
       trigger.focus();
@@ -279,6 +281,12 @@ export function initRecipeBookOverview() {
     if (currentIndex < pages.length - 1) {
       currentIndex += 1;
       updatePages();
+    }
+  });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      close();
     }
   });
 
