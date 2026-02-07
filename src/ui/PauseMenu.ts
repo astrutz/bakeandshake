@@ -61,14 +61,26 @@ export class PauseMenu {
   public moveSelectionUp() {
     if (!this.isPaused) return;
     if (this.mainMenuConfirmOpen) return;
-    this.selectedOption =
-      (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+    const saveExists = SaveManager.getSaveInfo().exists;
+    for (let i = 0; i < this.menuOptions.length; i++) {
+      this.selectedOption =
+        (this.selectedOption - 1 + this.menuOptions.length) % this.menuOptions.length;
+      if (!this.isOptionDisabled(this.menuOptions[this.selectedOption], saveExists)) {
+        break;
+      }
+    }
   }
 
   public moveSelectionDown() {
     if (!this.isPaused) return;
     if (this.mainMenuConfirmOpen) return;
-    this.selectedOption = (this.selectedOption + 1) % this.menuOptions.length;
+    const saveExists = SaveManager.getSaveInfo().exists;
+    for (let i = 0; i < this.menuOptions.length; i++) {
+      this.selectedOption = (this.selectedOption + 1) % this.menuOptions.length;
+      if (!this.isOptionDisabled(this.menuOptions[this.selectedOption], saveExists)) {
+        break;
+      }
+    }
   }
 
   public openMainMenuConfirm() {
@@ -101,6 +113,10 @@ export class PauseMenu {
     if (this.mainMenuConfirmOpen) return { action: '', close: false };
 
     const option = this.menuOptions[this.selectedOption];
+    const saveExists = SaveManager.getSaveInfo().exists;
+    if (this.isOptionDisabled(option, saveExists)) {
+      return { action: '', close: false };
+    }
 
     switch (option) {
       case 'Resume':
@@ -192,7 +208,7 @@ export class PauseMenu {
       const y = startY + index * (this.buttonHeight + this.buttonSpacing);
       const x = canvasWidth / 2 - this.buttonWidth / 2;
       const isSelected = index === this.selectedOption;
-      const isDisabled = (option === 'Load Game' || option === 'Delete Save') && !saveInfo.exists;
+      const isDisabled = this.isOptionDisabled(option, saveInfo.exists);
 
       // Button background
       if (isDisabled) {
@@ -289,5 +305,9 @@ export class PauseMenu {
     );
 
     ctx.restore();
+  }
+
+  private isOptionDisabled(option: string, saveExists: boolean): boolean {
+    return (option === 'Load Game' || option === 'Delete Save') && !saveExists;
   }
 }
