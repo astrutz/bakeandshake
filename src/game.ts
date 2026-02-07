@@ -655,6 +655,10 @@ export class Game {
     // Update NPCs (check for nearby NPCs)
     this.npcManager.update(this.player);
 
+    this.npcManager.getAllNPCs().forEach(npc => {
+      npc.updateAnimation(deltaTime);
+    });
+
     // Update dialog box
     this.dialogBox.update(deltaTime);
 

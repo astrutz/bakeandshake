@@ -25,7 +25,7 @@ const level1Flow: CustomerFlowLevel = {
         y: 450,
         spritePath: '/sprites/customer1.png',
         spriteSheet: {
-          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          row: 0,  // Row 2 (0-indexed, so row 1 = second row)
           col: 0,  // Column 1 (0-indexed, so col 0 = first column)
           width: 32,
           height: 32,
@@ -61,7 +61,7 @@ const level2Flow: CustomerFlowLevel = {
         y: 450,
         spritePath: '/sprites/customer1.png',
         spriteSheet: {
-          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          row: 0,  // Row 2 (0-indexed, so row 1 = second row)
           col: 0,  // Column 1 (0-indexed, so col 0 = first column)
           width: 32,
           height: 32,
@@ -91,7 +91,7 @@ const level2Flow: CustomerFlowLevel = {
         y: 450,
         spritePath: '/sprites/customer2.png',
         spriteSheet: {
-          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          row: 0,  // Row 2 (0-indexed, so row 1 = second row)
           col: 0,  // Column 1 (0-indexed, so col 0 = first column)
           width: 32,
           height: 32,
@@ -121,7 +121,7 @@ const level2Flow: CustomerFlowLevel = {
         y: 450,
         spritePath: '/sprites/customer3.png',
         spriteSheet: {
-          row: 1,  // Row 2 (0-indexed, so row 1 = second row)
+          row: 0,  // Row 2 (0-indexed, so row 1 = second row)
           col: 0,  // Column 1 (0-indexed, so col 0 = first column)
           width: 32,
           height: 32,

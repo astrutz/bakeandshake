@@ -37,6 +37,12 @@ export class NPC {
   // Sprite sheet properties
   private spriteSheetConfig: NPCConfig['spriteSheet'] | null = null;
 
+  private currentFrame: number = 0;
+  private animationTimer: number = 0;
+  private readonly ANIMATION_SPEED = 0.3; // seconds per frame
+  public isWalking: boolean = false;
+  public facingDirection: 'up' | 'down' | 'left' | 'right' = 'down';
+
   constructor(config: NPCConfig) {
     this.id = config.id;
     this.name = config.name;
@@ -70,8 +76,9 @@ export class NPC {
     if (this.spriteLoaded && this.sprite) {
       if (this.spriteSheetConfig) {
         // Draw from sprite sheet
-        const { row, col, width, height } = this.spriteSheetConfig;
-        const sourceX = col * width;
+        const { col, width, height } = this.spriteSheetConfig;
+        const row = this.getDirectionRow();
+        const sourceX = (col + this.currentFrame) * width;
         const sourceY = row * height;
 
         ctx.drawImage(
@@ -139,6 +146,51 @@ export class NPC {
     ctx.fillText(promptText, promptX, promptY - 6);
 
     ctx.restore();
+  }
+
+  /**
+   * Update animation frame
+   */
+  public updateAnimation(deltaTime: number) {
+    if (!this.isWalking) {
+      this.currentFrame = 0; // Reset to idle frame
+      return;
+    }
+
+    this.animationTimer += deltaTime;
+    if (this.animationTimer >= this.ANIMATION_SPEED) {
+      this.animationTimer = 0;
+      this.currentFrame = (this.currentFrame + 1) % 3; // Assuming 3 frames per direction
+    }
+  }
+
+  /**
+   * Set facing direction for sprite animation
+   */
+  public setDirection(direction: 'up' | 'down' | 'left' | 'right') {
+    this.facingDirection = direction;
+  }
+
+  /**
+   * Get the row in sprite sheet based on direction
+   */
+  private getDirectionRow(): number {
+    if (!this.spriteSheetConfig) return 0;
+
+    const baseRow = this.spriteSheetConfig.row;
+
+    switch (this.facingDirection) {
+      case 'down':
+        return baseRow + 0;
+      case 'left':
+        return baseRow + 1;
+      case 'right':
+        return baseRow + 2;
+      case 'up':
+        return baseRow + 3;
+      default:
+        return baseRow;
+    }
   }
 
   public getCollisionBox() {

@@ -21,6 +21,7 @@ export interface CustomerQueueEntry {
   isWalkingIn?: boolean;
   targetX?: number;
   targetY?: number;
+  walkDirection?: 'up' | 'down' | 'left' | 'right';
 }
 
 export class CustomerManager {
@@ -90,12 +91,7 @@ export class CustomerManager {
    */
   private updateWalkingCustomers(deltaTime: number) {
     for (const customer of this.customerQueue) {
-      if (
-        customer.isActive &&
-        customer.isWalkingIn &&
-        customer.targetX !== undefined &&
-        customer.targetY !== undefined
-      ) {
+      if (customer.isActive && customer.isWalkingIn && customer.targetX !== undefined && customer.targetY !== undefined) {
         const npc = customer.npc;
         const dx = customer.targetX - npc.x;
         const dy = customer.targetY - npc.y;
@@ -106,6 +102,8 @@ export class CustomerManager {
           npc.x = customer.targetX;
           npc.y = customer.targetY;
           customer.isWalkingIn = false;
+          npc.isWalking = false; // STOP ANIMATION
+          customer.walkDirection = undefined;
           console.log(`✅ Customer ${npc.name} arrived at position`);
 
           // Update collisions now that customer has stopped
@@ -113,6 +111,8 @@ export class CustomerManager {
             this.onVisibilityChange();
           }
         } else {
+          npc.isWalking = true; // ENABLE ANIMATION
+
           // Move towards target
           const moveDistance = this.WALK_SPEED * deltaTime;
 
@@ -121,13 +121,34 @@ export class CustomerManager {
             const dirY = dy / Math.abs(dy); // -1 or 1
             const stepY = Math.min(Math.abs(dy), moveDistance);
             npc.y += dirY * stepY;
+
+            // Set direction and update animation
+            if (dirY < 0) {
+              customer.walkDirection = 'up';
+              npc.setDirection('up');
+            } else {
+              customer.walkDirection = 'down';
+              npc.setDirection('down');
+            }
           }
           // Then move horizontally (towards target X)
           else if (Math.abs(dx) > 2) {
             const dirX = dx / Math.abs(dx); // -1 or 1
             const stepX = Math.min(Math.abs(dx), moveDistance);
             npc.x += dirX * stepX;
+
+            // Set direction and update animation
+            if (dirX < 0) {
+              customer.walkDirection = 'left';
+              npc.setDirection('left');
+            } else {
+              customer.walkDirection = 'right';
+              npc.setDirection('right');
+            }
           }
+
+          // Update animation frame
+          npc.updateAnimation(deltaTime);
         }
       }
     }
