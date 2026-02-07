@@ -84,8 +84,8 @@ export class Game {
 
     // Initialize player at center of screen (1 tile = 32×32)
     this.player = new Player(
-      this.canvas.width / 2 - GameConfig.player.width / 2,
-      this.canvas.height / 2 - GameConfig.player.height / 2,
+      500,
+      450,
       GameConfig.player.width,
       GameConfig.player.height,
     );
@@ -645,6 +645,9 @@ export class Game {
 
     // Render baking progress bar (if baking)
     this.bakingManager.renderBakingProgress(this.ctx, this.canvas.height);
+
+    // Render glowing highlight on active zone
+    this.bakingManager.renderActiveZoneHighlight(this.ctx);
 
     // Render notifications
     this.notificationManager.render(this.ctx, this.canvas.width, this.canvas.height);

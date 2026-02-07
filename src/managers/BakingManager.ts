@@ -175,23 +175,48 @@ export class BakingManager {
     this.bakingTimer = 0;
   }
 
-  public renderZones(ctx: CanvasRenderingContext2D): void {
+  public renderActiveZoneHighlight(ctx: CanvasRenderingContext2D): void {
+    const activeZone = this.getActiveZone();
+    if (!activeZone) return;
+
     ctx.save();
 
-    this.zones.forEach((zone) => {
-      // Draw zone highlight
-      ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+    // Pulsing glow effect - more transparent
+    const time = Date.now() / 500;
+    const alpha = 0.4 + Math.sin(time) * 0.6;
 
-      // Draw zone name
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(zone.name, zone.x + zone.width / 2, zone.y - 5);
-    });
+    // Center of the zone
+    const centerX = activeZone.x + activeZone.width / 2;
+    const centerY = activeZone.y + activeZone.height / 2;
+
+    // Slightly larger radius (60% of zone size instead of 50%)
+    const radius = Math.min(activeZone.width, activeZone.height) * 0.8;
+
+    // Create radial gradient that fades out
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, `rgba(255, 215, 0, ${alpha})`); // Bright in center
+    gradient.addColorStop(0.5, `rgba(255, 215, 0, ${alpha * 0.5})`); // Medium
+    gradient.addColorStop(1, `rgba(255, 215, 0, 0)`); // Fade to transparent
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
+  }
+
+  private getActiveZone(): BakingZone | null {
+    switch (this.currentStep) {
+      case BakingStep.IDLE:
+        return this.zones.get('pantry') || null;
+      case BakingStep.HAS_INGREDIENTS:
+        return this.zones.get('table') || null;
+      case BakingStep.HAS_DOUGH:
+        return this.zones.get('oven') || null;
+      default:
+        return null;
+    }
   }
 
   public renderBakingProgress(ctx: CanvasRenderingContext2D, canvasHeight: number): void {
