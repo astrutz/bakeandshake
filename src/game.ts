@@ -231,19 +231,22 @@ export class Game {
 
       // Complete current order with O key (for testing)
       if ((e.key === 'o' || e.key === 'O') && !this.pauseMenu.isPausedState()) {
-        if (this.currentInteractingCustomer) {
-          const order = this.currentInteractingCustomer.order;
+        // Check if we're near any customer right now
+        const nearbyCustomer = this.customerManager.getNearbyCustomer(this.player);
+
+        if (nearbyCustomer) {
+          const order = nearbyCustomer.order;
           if (this.inventoryManager.hasItem(order.item, order.quantity)) {
             this.inventoryManager.removeItem(order.item, order.quantity);
             this.customerManager.completeOrder(order.customerId);
             // Show thank you dialog
-            this.dialogBox.show(this.currentInteractingCustomer.npc.getNextDialog());
+            this.dialogBox.show(nearbyCustomer.npc.getNextDialog());
             this.player.setMovementLocked(true);
-            // Clear current interacting customer
-            this.currentInteractingCustomer = null;
           } else {
             console.log(`Not enough ${order.item}! Need ${order.quantity}`);
           }
+        } else {
+          console.log('No customer nearby to deliver to!');
         }
         return;
       }
