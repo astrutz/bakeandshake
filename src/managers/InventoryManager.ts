@@ -120,7 +120,7 @@ export class InventoryManager {
     // Position in top-left corner
     const x = 20;
     const y = 20;
-    const width = 180;
+    const width = 200;
     const height = 60;
 
     // Background
