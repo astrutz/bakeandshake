@@ -31,7 +31,7 @@ export const DEFAULT_RECIPES: RecipeCard[] = [
       'Teig abgedeckt 8–12 Stunden im Kühlschrank reifen lassen.',
       'Topf (Gusseisen oder ofenfest) im Ofen auf 250 °C Ober-/Unterhitze vorheizen.',
       'Teig auf bemehltes Backpapier stürzen, über die Seiten falten und mit Papier in den heißen Topf setzen.',
-      '30 Minuten mit Deckel backen, dann auf 200 Â°C reduzieren und weitere 20 Minuten ohne Deckel backen.',
+      '30 Minuten mit Deckel backen, dann auf 200 °C reduzieren und weitere 20 Minuten ohne Deckel backen.',
     ],
   },
   {

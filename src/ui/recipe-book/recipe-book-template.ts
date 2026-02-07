@@ -41,7 +41,7 @@ export function createRecipeBookMarkup(recipes: RecipeCard[]) {
                   <div class="recipe-cover-authors">
                     <span>Alex Strutz</span>
                     <span>Christin Zieba</span>
-                    <span>Lukas HÃ¼lsthorst</span>
+                    <span>Lukas Hülsthorst</span>
                     <span>Mona Uppenkamp</span>
                   </div>
                 </div>
