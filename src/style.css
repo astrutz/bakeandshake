@@ -60,14 +60,21 @@ h1 {
 
 #game {
   display: block;
-  width: 1024px;
-  height: 768px;
+
+
+    /* Scale the canvas display by 1.5x */
+    width: 1536px;  /* 1024 * 1.5 */
+    height: 1152px; /* 768 * 1.5 */
+
+    /* Ensure crisp pixel art rendering */
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
 
   background-color: #1a1a1a;
   border: 8px solid #d2691e;
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  image-rendering: crisp-edges;
+  /*image-rendering: crisp-edges;*/
 }
 
 #controls {
