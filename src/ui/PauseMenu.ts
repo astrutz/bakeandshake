@@ -11,7 +11,7 @@ export class PauseMenu {
   private feedbackTimer: number = 0;
   private readonly FEEDBACK_DURATION = 2; // seconds
 
-  // Button dimensions (scaled for 1280x960)
+  // Button dimensions (scaled for 1024x768)
   private buttonWidth: number = 360; // Was 300
   private buttonHeight: number = 70; // Was 60
   private buttonSpacing: number = 24; // Was 20
