@@ -6,6 +6,7 @@ import { SOUND_IDS } from './audio/SoundId.ts';
 import { initRecipeBookOverview } from './ui/RecipeBook/RecipeBook.ts';
 import { createMainMenu } from './ui/MainMenu.ts';
 import { MusicController } from './audio/MusicController.ts';
+import type { ProximitySoundManager } from './audio/ProximitySoundManager.ts';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -92,7 +93,7 @@ proximityManager.registerProximitySource({
   fadeInDistance: 100, // Start fading at 200px
   minVolume: 0.1, // Minimum 10% volume at edge
   debugColor: '#6759b3',
-});
+} as ProximitySoundManager);
 
 // Ofen an Position (500, 300) - kontinuierlicher Sound
 proximityManager.registerProximitySource({
@@ -107,7 +108,7 @@ proximityManager.registerProximitySource({
   fadeInDistance: 200,
   minVolume: 0.05,
   debugColor: '#77c2e4',
-});
+} as ProximitySoundManager);
 
 // Initialize recipe book overview overlay
 const openRecipeBook = initRecipeBookOverview();
