@@ -87,7 +87,7 @@ const menu = createMainMenu({
     game.start();
   },
   onRecipes: () => {
-    openRecipeBook?.();
+    openRecipeBook?.(menu.getCanvas());
   },
 });
 

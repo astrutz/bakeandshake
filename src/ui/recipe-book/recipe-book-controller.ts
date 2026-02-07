@@ -3,13 +3,11 @@ import './recipe-book.css';
 import { DEFAULT_RECIPES } from './recipe-book-data';
 import { createRecipeBookMarkup } from './recipe-book-template';
 
-export function initRecipeBookOverview() {
-  const trigger = document.querySelector<HTMLButtonElement>('#recipe-book');
-  if (!trigger) {
-    return;
-  }
+export function initRecipeBookOverview(trigger?: HTMLElement | null) {
+  const defaultFocusTarget = trigger ?? document.querySelector<HTMLElement>('#recipe-book');
 
-  const open = () => {
+  const open = (focusTargetOverride?: HTMLElement | null) => {
+    const focusTarget = focusTargetOverride ?? defaultFocusTarget;
     const overlay = document.createElement('div');
     overlay.className = 'recipe-book-overlay';
     overlay.setAttribute('aria-hidden', 'true');
@@ -66,9 +64,39 @@ export function initRecipeBookOverview() {
       currentIndex = 0;
       updatePages();
       window.setTimeout(() => {
+        window.removeEventListener('keydown', onKeyDown, true);
         overlay.remove();
-        trigger.focus();
+        focusTarget?.focus();
       }, 520);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!overlay.classList.contains('is-open')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        return;
+      }
+      event.stopPropagation();
+      if (
+        [
+          'ArrowUp',
+          'ArrowDown',
+          'ArrowLeft',
+          'ArrowRight',
+          ' ',
+          'Enter',
+          'PageUp',
+          'PageDown',
+          'Home',
+          'End',
+          'p',
+          'P',
+        ].includes(event.key)
+      ) {
+        event.preventDefault();
+      }
     };
 
     overlay.classList.remove('is-closing');
@@ -78,6 +106,7 @@ export function initRecipeBookOverview() {
     closeButton?.focus();
 
     closeButton?.addEventListener('click', close);
+    window.addEventListener('keydown', onKeyDown, true);
 
     prevButton?.addEventListener('click', () => {
       if (currentIndex > 0) {
@@ -168,5 +197,9 @@ export function initRecipeBookOverview() {
     });
   };
 
-  trigger.addEventListener('click', open);
+  if (trigger) {
+    trigger.addEventListener('click', () => open());
+  }
+
+  return open;
 }

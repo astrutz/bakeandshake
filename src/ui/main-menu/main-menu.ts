@@ -193,18 +193,26 @@ export function createMainMenu(actions: MainMenuActions) {
     }
   });
 
-  menuCanvas.addEventListener('keydown', (event) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     if (!active) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
       event.preventDefault();
+      event.stopPropagation();
       selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
       draw();
     } else if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
       event.preventDefault();
+      event.stopPropagation();
       selectedIndex = (selectedIndex + 1) % buttons.length;
       draw();
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
+      event.stopPropagation();
       const selected = buttons[selectedIndex];
       if (!selected) return;
       if (selected.id === 'start') {
@@ -214,7 +222,9 @@ export function createMainMenu(actions: MainMenuActions) {
         actions.onRecipes();
       }
     }
-  });
+  };
+
+  menuCanvas.addEventListener('keydown', handleKeyDown);
 
   const show = () => {
     active = true;
@@ -222,11 +232,13 @@ export function createMainMenu(actions: MainMenuActions) {
     selectedIndex = 0;
     resize();
     menuCanvas.focus();
+    window.addEventListener('keydown', handleKeyDown, true);
   };
 
   const hide = () => {
     active = false;
     menuCanvas.style.display = 'none';
+    window.removeEventListener('keydown', handleKeyDown, true);
   };
 
   window.addEventListener('resize', () => {
@@ -237,7 +249,7 @@ export function createMainMenu(actions: MainMenuActions) {
 
   show();
 
-  return { show, hide };
+  return { show, hide, getCanvas: () => menuCanvas };
 }
 
 function drawPixelRoundRect(
