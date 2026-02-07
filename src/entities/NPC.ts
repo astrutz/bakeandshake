@@ -10,13 +10,15 @@ export interface NPCConfig {
   height?: number;
   spritePath?: string;
   spriteSheet?: {
-    row: number;      // Which row in the sprite sheet
-    col: number;      // Which column in the sprite sheet
-    width: number;    // Width of each sprite frame
-    height: number;   // Height of each sprite frame
+    row: number; // Which row in the sprite sheet
+    col: number; // Which column in the sprite sheet
+    width: number; // Width of each sprite frame
+    height: number; // Height of each sprite frame
   };
   dialogLines: string[];
   interactionRadius?: number;
+  framesPerDirection?: number;
+  type?: string;
 }
 
 export class NPC {
@@ -28,6 +30,8 @@ export class NPC {
   public height: number;
   public dialogLines: string[];
   public interactionRadius: number;
+  public framesPerDirection: number;
+  public type: string;
   public hidden: boolean = false;
 
   private sprite: HTMLImageElement | null = null;
@@ -52,6 +56,8 @@ export class NPC {
     this.height = config.height || GameConfig.npc.defaultHeight;
     this.dialogLines = config.dialogLines;
     this.interactionRadius = config.interactionRadius || GameConfig.npc.defaultInteractionRadius;
+    this.framesPerDirection = config.framesPerDirection || 3; //Default value
+    this.type = config.type || 'HUMAN'; //Default value
 
     if (config.spritePath) {
       this.spriteSheetConfig = config.spriteSheet || null;
@@ -90,7 +96,7 @@ export class NPC {
           this.x,
           this.y,
           this.width,
-          this.height
+          this.height,
         );
       } else {
         // Draw full sprite
@@ -127,7 +133,7 @@ export class NPC {
     ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
     const textWidth = ctx.measureText(promptText).width;
     const padding = 20; // Padding on each side
-    const boxWidth = textWidth + (padding * 2);
+    const boxWidth = textWidth + padding * 2;
     const boxHeight = 28;
 
     // Background
@@ -160,7 +166,7 @@ export class NPC {
     this.animationTimer += deltaTime;
     if (this.animationTimer >= this.ANIMATION_SPEED) {
       this.animationTimer = 0;
-      this.currentFrame = (this.currentFrame + 1) % 3; // Assuming 3 frames per direction
+      this.currentFrame = (this.currentFrame + 1) % this.framesPerDirection;
     }
   }
 
