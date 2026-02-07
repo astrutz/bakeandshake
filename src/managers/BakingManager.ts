@@ -7,7 +7,6 @@ export enum BakingStep {
   HAS_INGREDIENTS = 'HAS_INGREDIENTS',
   HAS_DOUGH = 'HAS_DOUGH',
   BAKING = 'BAKING',
-  HAS_BREAD = 'HAS_BREAD',
 }
 
 export interface BakingZone {
@@ -81,8 +80,7 @@ export class BakingManager {
     const zoneCenterY = zone.y + zone.height / 2;
 
     const distance = Math.sqrt(
-      Math.pow(playerCenterX - zoneCenterX, 2) +
-      Math.pow(playerCenterY - zoneCenterY, 2)
+      Math.pow(playerCenterX - zoneCenterX, 2) + Math.pow(playerCenterY - zoneCenterY, 2),
     );
 
     return distance <= this.INTERACTION_RADIUS;
@@ -119,7 +117,7 @@ export class BakingManager {
         if (this.isNearZone('oven', player)) {
           this.currentStep = BakingStep.BAKING;
           this.bakingTimer = 0;
-          this.notificationManager.showNotification('🔥 Baking bread...', 3);
+          this.notificationManager.showNotification('🔥 Baking bread... (5s)', 3);
           return true;
         }
         break;
@@ -127,11 +125,6 @@ export class BakingManager {
       case BakingStep.BAKING:
         // Can't do anything while baking
         this.notificationManager.showNotification('⏳ Wait for bread to bake...', 3);
-        return false;
-
-      case BakingStep.HAS_BREAD:
-        // Already have bread, can't make more
-        this.notificationManager.showNotification('✅ You already have bread!', 3);
         return false;
     }
 
@@ -150,8 +143,6 @@ export class BakingManager {
         return '📍 Go to the Oven to bake!';
       case BakingStep.BAKING:
         return '⏳ Bread is baking...';
-      case BakingStep.HAS_BREAD:
-        return '✅ Deliver the bread to a customer!';
       default:
         return '';
     }
@@ -162,7 +153,9 @@ export class BakingManager {
       this.bakingTimer += deltaTime;
 
       if (this.bakingTimer >= this.BAKING_DURATION) {
-        this.currentStep = BakingStep.HAS_BREAD;
+        // Baking complete - automatically reset to IDLE
+        this.currentStep = BakingStep.IDLE;
+        this.bakingTimer = 0;
         this.notificationManager.showNotification('🍞 Bread is ready!', 4);
         return true; // Bread is ready!
       }
@@ -175,15 +168,6 @@ export class BakingManager {
       return Math.min(1, this.bakingTimer / this.BAKING_DURATION);
     }
     return 0;
-  }
-
-  public consumeBread(): boolean {
-    if (this.currentStep === BakingStep.HAS_BREAD) {
-      this.currentStep = BakingStep.IDLE;
-      this.bakingTimer = 0;
-      return true;
-    }
-    return false;
   }
 
   public reset(): void {

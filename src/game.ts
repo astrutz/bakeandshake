@@ -308,13 +308,9 @@ export class Game {
         return;
       }
 
+      // Baking process with B key
       if ((e.key === 'b' || e.key === 'B') && !this.pauseMenu.isPausedState()) {
-        const actionSuccessful = this.bakingManager.handleBakingAction(this.player);
-
-        // If we completed the bread-making process, add bread to inventory
-        if (actionSuccessful && this.bakingManager.getCurrentStep() === BakingStep.HAS_BREAD) {
-          // Bread will be added to inventory when baking completes
-        }
+        this.bakingManager.handleBakingAction(this.player);
         return;
       }
 
@@ -328,10 +324,10 @@ export class Game {
           if (this.inventoryManager.hasItem(order.item, order.quantity)) {
             this.inventoryManager.removeItem(order.item, order.quantity);
 
-            // Consume bread from baking manager
-            if (order.item === 'bread') {
-              this.bakingManager.consumeBread();
-            }
+            // REMOVE THIS SECTION:
+            // if (order.item === 'bread') {
+            //   this.bakingManager.consumeBread();
+            // }
 
             this.customerManager.completeOrder(order.customerId);
             this.dialogBox.show(nearbyCustomer.npc.getNextDialog());
