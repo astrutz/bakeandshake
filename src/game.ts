@@ -15,9 +15,12 @@ import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
+import { UI } from './config/theme';
 import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
 import { BakingManager } from './managers/BakingManager';
 import { NotificationManager } from './ui/NotificationManager.ts';
+import { MusicToggleButton } from './ui/MusicToggleButton.ts';
+import { MusicController } from './audio/MusicController.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -38,6 +41,8 @@ export class Game {
   private animationFrameId: number | null = null;
   private bakingManager: BakingManager;
   private notificationManager: NotificationManager;
+  private musicController: MusicController;
+  private musicToggleButton: MusicToggleButton;
 
   // Camera/viewport for the map
   private camera = {
@@ -62,9 +67,10 @@ export class Game {
   // Current level
   private currentLevel: number = 1;
 
-  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
+  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager, musicController: MusicController) {
     this.canvas = canvas;
     this.soundManager = soundManager;
+    this.musicController = musicController;
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Failed to get 2D context');
@@ -134,11 +140,20 @@ export class Game {
     // Initialize baking manager
     this.bakingManager = new BakingManager(this.notificationManager, this.inventoryManager);
 
+    // Initialize music toggle button
+    this.musicToggleButton = new MusicToggleButton(
+      () => this.musicController.isEnabled(),
+      () => this.musicController.toggle(),
+    );
+
     // Load the background map image
     this.loadMapImage();
 
     // Setup keyboard controls for dialog
     this.setupKeyboardControls();
+
+    // Setup pointer controls for HUD
+    this.setupPointerControls();
 
     // Try to auto-load save on startup
     this.tryAutoLoad();
@@ -291,6 +306,11 @@ export class Game {
       if (this.keys[e.key]) return; // Prevent repeat
       this.keys[e.key] = true;
 
+      if (e.key === 'm' || e.key === 'M') {
+        this.musicController.toggle();
+        return;
+      }
+
       // Add coins with C key (for testing)
       if ((e.key === 'c' || e.key === 'C') && !this.pauseMenu.isPausedState()) {
         this.coinManager.addCoins(10);
@@ -406,6 +426,27 @@ export class Game {
 
     window.addEventListener('keyup', (e) => {
       this.keys[e.key] = false;
+    });
+  }
+
+  private setupPointerControls() {
+    this.canvas.addEventListener('mousemove', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+      const hit = this.musicToggleButton.hitTest(x, y);
+      this.canvas.style.cursor = hit ? 'pointer' : 'default';
+    });
+
+    this.canvas.addEventListener('click', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+      this.musicToggleButton.handleClick(x, y);
     });
   }
 
@@ -694,8 +735,22 @@ export class Game {
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
-    // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width);
+    // Render music toggle in the top-right corner
+    const coinHudDefault = this.coinManager.getHudBoxRect(this.ctx, this.canvas.width);
+    const buttonSize = coinHudDefault.height;
+    const gap = UI.padding.small;
+    const buttonRight = this.canvas.width - 24;
+    this.musicToggleButton.setBounds({
+      x: buttonRight - buttonSize,
+      y: coinHudDefault.y + (coinHudDefault.height - buttonSize) / 2,
+      width: buttonSize,
+      height: buttonSize,
+    });
+    this.musicToggleButton.render(this.ctx);
+
+    // Render coin display to the left of the music toggle
+    const coinsRight = buttonRight - buttonSize - gap;
+    this.coinManager.renderAtRight(this.ctx, coinsRight);
 
     // Update pause menu with current stats
     this.pauseMenu.setPlayerStats(

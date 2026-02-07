@@ -5,6 +5,7 @@ import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { initRecipeBookOverview } from './ui/RecipeBook/RecipeBook.ts';
 import { createMainMenu } from './ui/MainMenu.ts';
+import { MusicController } from './audio/MusicController.ts';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -26,10 +27,6 @@ soundManager.registerSound(SOUND_IDS.BACKGROUND_COFFEE, '/audio/coffee-ambience-
   loop: true,
 });
 
-// Initialize the game
-const game = new Game(canvas, soundManager);
-await game.loadCollisionsFromTiled('/map/bakery.tmj');
-
 const ambientManager = new AmbientAudioManager(
   ['/audio/Frische_Brötchen_warme_Herzen.mp3', '/audio/Frische_Brötchen_warme_Herzen_2.mp3'],
   {
@@ -40,7 +37,7 @@ const ambientManager = new AmbientAudioManager(
   },
 );
 
-const musicToggleBtn = document.querySelector<HTMLButtonElement>('#music');
+const musicController = new MusicController(ambientManager, soundManager);
 
 // Set up controls
 const toggleBtn = document.querySelector<HTMLButtonElement>('#toggle');
@@ -58,38 +55,27 @@ toggleBtn?.addEventListener('click', () => {
   isRunning = !isRunning;
 });
 
-// Musik Toggle Button
-let musicRunning = false;
-
-musicToggleBtn?.addEventListener('click', async () => {
-  if (!musicRunning) {
-    musicToggleBtn.textContent = 'Stop Musik';
-    ambientManager.start();
-    // Hintergrundeffekte starten
-    soundManager.playSound(SOUND_IDS.BACKGROUND_COFFEE);
-  } else {
-    musicToggleBtn.textContent = 'Spiel Musik ab';
-    ambientManager.stop();
-    soundManager.stopSound(SOUND_IDS.BACKGROUND_COFFEE);
-  }
-
-  musicRunning = !musicRunning;
-});
+// Initialize the game
+const game = new Game(canvas, soundManager, musicController);
+await game.loadCollisionsFromTiled('/map/bakery.tmj');
 
 // Initialize recipe book overview overlay
 const openRecipeBook = initRecipeBookOverview();
 
 // Main menu
-const menu = createMainMenu({
-  onStart: () => {
-    isRunning = true;
-    toggleBtn && (toggleBtn.textContent = 'Pause');
-    game.start();
+const menu = createMainMenu(
+  {
+    onStart: () => {
+      isRunning = true;
+      toggleBtn && (toggleBtn.textContent = 'Pause');
+      game.start();
+    },
+    onRecipes: () => {
+      openRecipeBook?.(menu.getCanvas());
+    },
   },
-  onRecipes: () => {
-    openRecipeBook?.(menu.getCanvas());
-  },
-});
+  musicController,
+);
 
 window.addEventListener('open-main-menu', () => {
   game.stop();

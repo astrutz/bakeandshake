@@ -1,4 +1,6 @@
 import { Colors, Fonts, UI } from '../config/theme.ts';
+import { MusicToggleButton } from './MusicToggleButton.ts';
+import { MusicController } from '../audio/MusicController.ts';
 
 type MainMenuActions = {
   onStart: () => void;
@@ -14,6 +16,8 @@ type MenuButton = {
   height: number;
 };
 
+type MenuHit = MenuButton | { id: 'music' };
+
 type MenuLayout = {
   innerX: number;
   innerY: number;
@@ -28,7 +32,7 @@ type ImageRefs = {
   mapReadyRef: { value: boolean };
 };
 
-export function createMainMenu(actions: MainMenuActions) {
+export function createMainMenu(actions: MainMenuActions, musicController: MusicController) {
   const container = document.querySelector<HTMLDivElement>('#game-container');
   const gameCanvas = document.querySelector<HTMLCanvasElement>('#game');
   if (!container || !gameCanvas) {
@@ -47,6 +51,10 @@ export function createMainMenu(actions: MainMenuActions) {
   }
 
   let buttons: MenuButton[] = [];
+  const musicToggle = new MusicToggleButton(
+    () => musicController.isEnabled(),
+    () => musicController.toggle(),
+  );
   let active = true;
   let selectedIndex = 0;
 
@@ -71,6 +79,16 @@ export function createMainMenu(actions: MainMenuActions) {
 
     context.clearRect(0, 0, width, height);
     dramMapImage(context, width, height, images.mapImage, images.mapReadyRef.value);
+    const musicButtonSize = MusicToggleButton.getDefaultSize();
+    const musicMargin = UI.padding.small * 1.2;
+    musicToggle.setBounds({
+      x: width - musicMargin - musicButtonSize,
+      y: musicMargin,
+      width: musicButtonSize,
+      height: musicButtonSize,
+    });
+    musicToggle.render(context);
+
     drawPanel(context, layout);
     drawPanelBackground(context, layout, images.backgroundImage, images.imageReadyRef.value);
     drawTitle(context, layout, width);
@@ -80,29 +98,46 @@ export function createMainMenu(actions: MainMenuActions) {
     drawFooter(context, layout, width);
   };
 
-  const hitTest = (x: number, y: number) =>
-    buttons.find(
+  const hitTest = (x: number, y: number): MenuHit | undefined => {
+    if (musicToggle.hitTest(x, y)) {
+      return { id: 'music' as const };
+    }
+    return buttons.find(
       (button) =>
         x >= button.x &&
         x <= button.x + button.width &&
         y >= button.y &&
         y <= button.y + button.height,
     );
+  };
+
+  const getCanvasPoint = (event: MouseEvent) => {
+    const rect = menuCanvas.getBoundingClientRect();
+    const scaleX = menuCanvas.width / rect.width;
+    const scaleY = menuCanvas.height / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
+  };
 
   menuCanvas.addEventListener('mousemove', (event) => {
     if (!active) return;
-    const rect = menuCanvas.getBoundingClientRect();
-    const hit = hitTest(event.clientX - rect.left, event.clientY - rect.top);
+    const point = getCanvasPoint(event);
+    const hit = hitTest(point.x, point.y);
     menuCanvas.style.cursor = hit ? 'pointer' : 'default';
   });
 
   menuCanvas.addEventListener('click', (event) => {
     if (!active) return;
-    const rect = menuCanvas.getBoundingClientRect();
-    const hit = hitTest(event.clientX - rect.left, event.clientY - rect.top);
+    const point = getCanvasPoint(event);
+    const hit = hitTest(point.x, point.y);
     if (!hit) return;
 
-    if (hit.id === 'start') {
+    if (hit.id === 'music') {
+      musicController.toggle();
+      draw();
+    } else if (hit.id === 'start') {
       actions.onStart();
       hide();
     } else if (hit.id === 'recipes') {
@@ -115,6 +150,13 @@ export function createMainMenu(actions: MainMenuActions) {
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
+      return;
+    }
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault();
+      event.stopPropagation();
+      musicController.toggle();
+      draw();
       return;
     }
     if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
