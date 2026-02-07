@@ -16,6 +16,8 @@ import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
 import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
+import { BakingManager, BakingStep } from './managers/BakingManager';
+import { NotificationManager } from './ui/NotificationManager.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -34,6 +36,8 @@ export class Game {
   private levelCompleteScreen: LevelCompleteScreen;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
+  private bakingManager: BakingManager;
+  private notificationManager: NotificationManager;
 
   // Camera/viewport for the map
   private camera = {
@@ -123,6 +127,12 @@ export class Game {
 
     // Initialize level complete screen
     this.levelCompleteScreen = new LevelCompleteScreen();
+
+    // Initialize notification manager
+    this.notificationManager = new NotificationManager();
+
+    // Initialize baking manager
+    this.bakingManager = new BakingManager(this.notificationManager, this.inventoryManager);
 
     // Load the background map image
     this.loadMapImage();
@@ -217,7 +227,7 @@ export class Game {
       this.startLevel(this.currentLevel);
     } else {
       // No more levels - show victory screen or loop back
-      console.log('🏆 You\'ve completed all levels!');
+      console.log("🏆 You've completed all levels!");
       this.currentLevel = 1;
       this.startLevel(1);
     }
@@ -298,27 +308,37 @@ export class Game {
         return;
       }
 
-      // Add bread to inventory with B key (for testing)
       if ((e.key === 'b' || e.key === 'B') && !this.pauseMenu.isPausedState()) {
-        this.inventoryManager.addItem('bread', 1);
+        const actionSuccessful = this.bakingManager.handleBakingAction(this.player);
+
+        // If we completed the bread-making process, add bread to inventory
+        if (actionSuccessful && this.bakingManager.getCurrentStep() === BakingStep.HAS_BREAD) {
+          // Bread will be added to inventory when baking completes
+        }
         return;
       }
 
-      // Complete current order with O key (for testing)
+      // Update the O key handler to consume bread from baking manager:
+      // In setupKeyboardControls, find the O key handler and update it:
       if ((e.key === 'o' || e.key === 'O') && !this.pauseMenu.isPausedState()) {
-        // Check if we're near any customer right now
         const nearbyCustomer = this.customerManager.getNearbyCustomer(this.player);
 
         if (nearbyCustomer) {
           const order = nearbyCustomer.order;
           if (this.inventoryManager.hasItem(order.item, order.quantity)) {
             this.inventoryManager.removeItem(order.item, order.quantity);
+
+            // Consume bread from baking manager
+            if (order.item === 'bread') {
+              this.bakingManager.consumeBread();
+            }
+
             this.customerManager.completeOrder(order.customerId);
-            // Show thank you dialog
             this.dialogBox.show(nearbyCustomer.npc.getNextDialog());
             this.player.setMovementLocked(true);
           } else {
             console.log(`Not enough ${order.item}! Need ${order.quantity}`);
+            this.notificationManager.showNotification(`❌ Not enough ${order.item}!`);
           }
         } else {
           console.log('No customer nearby to deliver to!');
@@ -519,9 +539,24 @@ export class Game {
     // Update level complete screen animation
     this.levelCompleteScreen.update(deltaTime);
 
+    // Update notification manager
+    this.notificationManager.update(deltaTime);
+
     // Don't update game state if paused
     if (this.pauseMenu.isPausedState() || this.levelCompleteScreen.isVisibleState()) {
       return;
+    }
+
+    // Update baking manager
+    const breadReady = this.bakingManager.update(deltaTime);
+    if (breadReady) {
+      // Try to add bread to inventory when baking completes
+      const added = this.inventoryManager.addItem('bread', 1);
+      if (!added) {
+        // This shouldn't happen as we check before starting, but just in case
+        this.notificationManager.showNotification('❌ Inventory full! Bread wasted!', 3);
+        this.bakingManager.reset(); // Reset baking state
+      }
     }
 
     // Update customer manager (independent of serving)
@@ -612,6 +647,15 @@ export class Game {
 
     // Render NPCs
     this.npcManager.render(this.ctx);
+
+    // Render baking progress bar (if baking)
+    this.bakingManager.renderBakingProgress(this.ctx, this.canvas.height);
+
+    // Render notifications
+    this.notificationManager.render(this.ctx, this.canvas.width, this.canvas.height);
+
+    // Render inventory (top-left corner) - ADD THIS
+    this.inventoryManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render player
     this.player.render(this.ctx);
