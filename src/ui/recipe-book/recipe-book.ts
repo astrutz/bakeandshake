@@ -19,7 +19,7 @@ const DEFAULT_RECIPES: RecipeCard[] = [
     difficulty: 'Einfach',
     blurb: 'Ein sehr einfaches Brot mit Übernachtgare und knuspriger Kruste.',
     badge: 'Mona Core',
-    image: '/dinkelmona.png',
+    image: '/recipes/dinkelmona.png',
     imageAlt: 'Dinkelbrot',
     ingredients: [
       '10 g frische Hefe',
@@ -38,7 +38,7 @@ const DEFAULT_RECIPES: RecipeCard[] = [
   },
   {
     title: 'Pizzateig',
-    image: '/pizzateig.png',
+    image: '/recipes/pizzateig.png',
     imageAlt: 'Pizzateig',
     time: '1 h 15 min',
     difficulty: 'Einfach',
@@ -61,7 +61,7 @@ const DEFAULT_RECIPES: RecipeCard[] = [
   },
   {
     title: 'Focaccia',
-    image: '/pita.png',
+    image: '/recipes/pita.png',
     imageAlt: 'Focaccia',
     time: '1 h 55 min',
     difficulty: 'Einfach',
