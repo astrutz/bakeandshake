@@ -649,6 +649,9 @@ export class Game {
     // Render pause menu (must be on top of everything)
     this.pauseMenu.render(this.ctx, this.canvas.width, this.canvas.height);
 
+    // Render level complete screen (should be on top of pause menu)
+    this.levelCompleteScreen.render(this.ctx, this.canvas.width, this.canvas.height);
+
     // Render debug info overlay
     this.debugRenderer.renderInfo(this.ctx, {
       player: this.player,
