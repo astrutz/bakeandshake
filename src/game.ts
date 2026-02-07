@@ -438,7 +438,7 @@ export class Game {
       console.error('Failed to load map image');
       this.mapLoaded = false;
     };
-    this.mapImage.src = '/test.jpg';
+    this.mapImage.src = '/map.png';
   }
 
   private update(deltaTime: number) {

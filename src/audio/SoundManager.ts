@@ -16,7 +16,7 @@ export class SoundManager {
   }
 
   public playSound(id: string): void {
-    console.log('playSound', id);
+    console.log(`🔊 Sound: ${id}`);
     const audio = this.effects.get(id);
     if (!audio) {
       console.warn(`Sound ${id} nicht gefunden`);
