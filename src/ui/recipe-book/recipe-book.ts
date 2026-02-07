@@ -263,9 +263,33 @@ export function initRecipeBookOverview() {
       currentIndex = 0;
       updatePages();
       window.setTimeout(() => {
+        window.removeEventListener('keydown', onKeyDown, true);
         overlay.remove();
         trigger.focus();
       }, 520);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!overlay.classList.contains('is-open')) return;
+      event.stopPropagation();
+      if (
+        [
+          'ArrowUp',
+          'ArrowDown',
+          'ArrowLeft',
+          'ArrowRight',
+          ' ',
+          'PageUp',
+          'PageDown',
+          'Home',
+          'End',
+        ].includes(event.key)
+      ) {
+        event.preventDefault();
+      }
+      if (event.key === 'Escape') {
+        close();
+      }
     };
 
     overlay.classList.remove('is-closing');
@@ -273,6 +297,8 @@ export function initRecipeBookOverview() {
     overlay.setAttribute('aria-hidden', 'false');
     updatePages();
     closeButton?.focus();
+
+    window.addEventListener('keydown', onKeyDown, true);
 
     closeButton?.addEventListener('click', close);
 
