@@ -15,6 +15,7 @@ import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
+import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -30,6 +31,7 @@ export class Game {
   private xpManager: XPManager;
   private customerManager: CustomerManager;
   private inventoryManager: InventoryManager;
+  private levelCompleteScreen: LevelCompleteScreen;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -55,9 +57,6 @@ export class Game {
 
   // Current level
   private currentLevel: number = 1;
-
-  // Track which customer we're currently interacting with
-  private currentInteractingCustomer: CustomerQueueEntry | null = null;
 
   constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
     this.canvas = canvas;
@@ -102,16 +101,11 @@ export class Game {
     // Initialize inventory
     this.inventoryManager = new InventoryManager();
 
-    // Initialize customer manager (no auto-dialog on arrival)
     this.customerManager = new CustomerManager(
       this.handleCustomerArrive.bind(this),
       this.handleOrderComplete.bind(this),
-    );
-
-    this.customerManager = new CustomerManager(
-      this.handleCustomerArrive.bind(this),
-      this.handleOrderComplete.bind(this),
-      this.handleCustomerVisibilityChange.bind(this), // Add this
+      this.handleCustomerVisibilityChange.bind(this),
+      this.handleLevelComplete.bind(this),
     );
 
     // Initialize collision system with test data
@@ -126,6 +120,9 @@ export class Game {
 
     // Initialize debug renderer
     this.debugRenderer = new DebugRenderer();
+
+    // Initialize level complete screen
+    this.levelCompleteScreen = new LevelCompleteScreen();
 
     // Load the background map image
     this.loadMapImage();
@@ -165,12 +162,72 @@ export class Game {
     this.npcManager.updateCollisions();
   }
 
+  private handleLevelComplete() {
+    console.log('🎊 Level Complete!');
+
+    const stats: LevelStats = {
+      level: this.currentLevel,
+      timeElapsed: this.customerManager.getGameTime(),
+      coinsEarned: this.coinManager.getCoins(),
+      customersServed: this.customerManager.getCompletedCustomers().length,
+      currentXP: this.xpManager.getCurrentXP(),
+      currentLevel: this.xpManager.getCurrentLevel(),
+    };
+
+    // Lock player movement
+    this.player.setMovementLocked(true);
+
+    // Show level complete screen
+    this.levelCompleteScreen.show(stats);
+  }
+
+  private handleLevelCompleteSelection() {
+    const selection = this.levelCompleteScreen.getSelectedOption();
+
+    if (selection === 'continue') {
+      // Go to next level
+      this.nextLevel();
+    } else if (selection === 'menu') {
+      // Return to main menu (for now, just restart level 1)
+      console.log('📋 Returning to main menu...');
+      this.currentLevel = 1;
+      this.customerManager.clear();
+      this.player.setMovementLocked(false);
+      this.levelCompleteScreen.hide();
+      this.startLevel(1);
+    }
+  }
+
+  private nextLevel() {
+    this.currentLevel++;
+
+    // Hide level complete screen
+    this.levelCompleteScreen.hide();
+
+    // Clear current level data
+    this.customerManager.clear();
+    this.player.setMovementLocked(false);
+    this.dialogBox.hide();
+
+    // Start new level
+    const nextLevelFlow = getCustomerFlow(this.currentLevel);
+
+    if (nextLevelFlow) {
+      this.startLevel(this.currentLevel);
+    } else {
+      // No more levels - show victory screen or loop back
+      console.log('🏆 You\'ve completed all levels!');
+      this.currentLevel = 1;
+      this.startLevel(1);
+    }
+  }
+
   private handleCustomerArrive(customer: CustomerQueueEntry) {
     // Just log the arrival, don't show dialog automatically
     console.log(`👤 ${customer.npc.name} has arrived! Walk up to them and press E to talk.`);
   }
 
-  private handleOrderComplete(order: any, rewards: { coins: number; xp: number }) {
+  private handleOrderComplete(rewards: { coins: number; xp: number }) {
     this.coinManager.addCoins(rewards.coins);
     this.xpManager.addXP(rewards.xp);
   }
@@ -317,6 +374,18 @@ export class Game {
         this.dialogBox.hide();
         this.player.setMovementLocked(false);
       }
+
+      // Handle level complete screen
+      if (this.levelCompleteScreen.isVisibleState()) {
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          this.levelCompleteScreen.moveSelectionUp();
+        } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          this.levelCompleteScreen.moveSelectionDown();
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          this.handleLevelCompleteSelection();
+        }
+        return; // Don't process other keys when screen is visible
+      }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -415,11 +484,6 @@ export class Game {
         this.soundManager.playSound(SOUND_IDS.NPC_TALK);
         // Lock player movement when dialog opens
         this.player.setMovementLocked(true);
-
-        // Track which customer we're interacting with
-        if (nearbyCustomer) {
-          this.currentInteractingCustomer = nearbyCustomer;
-        }
       }
     }
   }
@@ -451,13 +515,16 @@ export class Game {
     // Update XP bar animation
     this.xpManager.update(deltaTime);
 
+    // Update level complete screen animation
+    this.levelCompleteScreen.update(deltaTime);
+
     // Don't update game state if paused
-    if (this.pauseMenu.isPausedState()) {
+    if (this.pauseMenu.isPausedState() || this.levelCompleteScreen.isVisibleState()) {
       return;
     }
 
     // Update customer manager (independent of serving)
-    this.customerManager.update(deltaTime, this.player);
+    this.customerManager.update(deltaTime);
 
     // Update player and get potential new position
     const { potentialX, potentialY } = this.player.update(deltaTime);
@@ -564,13 +631,13 @@ export class Game {
     this.ctx.restore();
 
     // Render XP bar (bottom-left corner)
-    this.xpManager.render(this.ctx, this.canvas.width, this.canvas.height);
+    this.xpManager.render(this.ctx, this.canvas.height);
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
 
     // Render coin display (top-right corner)
-    this.coinManager.render(this.ctx, this.canvas.width, this.canvas.height);
+    this.coinManager.render(this.ctx, this.canvas.width);
 
     // Update pause menu with current stats
     this.pauseMenu.setPlayerStats(
@@ -588,6 +655,16 @@ export class Game {
       camera: this.camera,
       collisionCount: this.collisionSystem.getCollisionRects().length,
       fps: this.fps,
+    });
+
+    const progress = this.customerManager.getProgress();
+    this.debugRenderer.renderInfo(this.ctx, {
+      player: this.player,
+      camera: this.camera,
+      collisionCount: this.collisionSystem.getCollisionRects().length,
+      fps: this.fps,
+      level: this.currentLevel,
+      progress: `${progress.completed}/${progress.total} customers`, // Add this
     });
   }
 

@@ -60,7 +60,7 @@ const level1Flow: CustomerFlowLevel = {
           xp: 20,
         },
       },
-      arrivalTime: 30, // 30 seconds after level start
+      arrivalTime: 10, // 30 seconds after level start
     },
     {
       // Third customer - arrives after 60 seconds
@@ -83,7 +83,7 @@ const level1Flow: CustomerFlowLevel = {
           xp: 30,
         },
       },
-      arrivalTime: 60, // 60 seconds after level start
+      arrivalTime: 15, // 60 seconds after level start
     },
   ],
 };
@@ -93,7 +93,8 @@ const level1Flow: CustomerFlowLevel = {
  */
 export const CUSTOMER_FLOWS: Record<number, CustomerFlowLevel> = {
   1: level1Flow,
-  // Add more levels here later
+  2: level1Flow,
+  // todo Add more levels here later
 };
 
 /**

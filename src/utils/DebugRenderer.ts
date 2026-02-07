@@ -69,6 +69,8 @@ export class DebugRenderer {
       camera: { x: number; y: number };
       collisionCount: number;
       fps?: number;
+      level?: number;
+      progress?: string;
     }
   ) {
     if (!this.enabled) return;

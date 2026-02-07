@@ -72,6 +72,7 @@ export const Theme = {
 
   // Fonts (scaled for 1024x768 canvas)
   fonts: {
+    heading: 'Georgia, serif',
     body: 'Arial',
     monospace: '"Courier New", monospace',
     sizes: {

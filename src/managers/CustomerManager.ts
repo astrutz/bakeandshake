@@ -25,17 +25,20 @@ export class CustomerManager {
 
   // Callbacks
   private onCustomerArrive?: (customer: CustomerQueueEntry) => void;
-  private onOrderComplete?: (order: CustomerOrder, rewards: { coins: number; xp: number }) => void;
-  private onVisibilityChange?: () => void; // New: callback when customer visibility changes
+  private onOrderComplete?: (rewards: { coins: number; xp: number }) => void;
+  private onVisibilityChange?: () => void;
+  private onLevelComplete?: () => void; // New: callback when all customers are served
 
   constructor(
     onCustomerArrive?: (customer: CustomerQueueEntry) => void,
-    onOrderComplete?: (order: CustomerOrder, rewards: { coins: number; xp: number }) => void,
+    onOrderComplete?: (rewards: { coins: number; xp: number }) => void,
     onVisibilityChange?: () => void,
+    onLevelComplete?: () => void,
   ) {
     this.onCustomerArrive = onCustomerArrive;
     this.onOrderComplete = onOrderComplete;
     this.onVisibilityChange = onVisibilityChange;
+    this.onLevelComplete = onLevelComplete;
   }
 
   /**
@@ -60,7 +63,7 @@ export class CustomerManager {
   /**
    * Update customer queue based on game time
    */
-  public update(deltaTime: number, player: Player) {
+  public update(deltaTime: number) {
     this.gameTime += deltaTime;
 
     // Check if any customers should arrive (independent of previous customers)
@@ -113,10 +116,34 @@ export class CustomerManager {
     }
 
     if (this.onOrderComplete) {
-      this.onOrderComplete(customer.order, customer.order.reward);
+      this.onOrderComplete(customer.order.reward);
     }
 
+    // Check if level is complete
+    this.checkLevelComplete();
+
     return true;
+  }
+
+  /**
+   * Check if all customers have been served
+   */
+  private checkLevelComplete() {
+    const allCompleted = this.customerQueue.length > 0 &&
+      this.customerQueue.every((c) => c.isCompleted);
+
+    if (allCompleted && this.onLevelComplete) {
+      console.log('🎉 Level complete! All customers served!');
+      this.onLevelComplete();
+    }
+  }
+
+  /**
+   * Check if level is complete (public method)
+   */
+  public isLevelComplete(): boolean {
+    return this.customerQueue.length > 0 &&
+      this.customerQueue.every((c) => c.isCompleted);
   }
 
   /**
@@ -166,6 +193,17 @@ export class CustomerManager {
    */
   public getCompletedCustomers(): CustomerQueueEntry[] {
     return this.customerQueue.filter((c) => c.isCompleted);
+  }
+
+  /**
+   * Get completion progress
+   */
+  public getProgress(): { completed: number; total: number; percentage: number } {
+    const total = this.customerQueue.length;
+    const completed = this.getCompletedCustomers().length;
+    const percentage = total > 0 ? (completed / total) * 100 : 0;
+
+    return { completed, total, percentage };
   }
 
   /**

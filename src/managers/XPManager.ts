@@ -117,7 +117,7 @@ export class XPManager {
     }
   }
 
-  public render(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) {
+  public render(ctx: CanvasRenderingContext2D, canvasHeight: number) {
     ctx.save();
 
     // Position at bottom-left corner
