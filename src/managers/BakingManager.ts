@@ -254,4 +254,79 @@ export class BakingManager {
 
     ctx.restore();
   }
+
+  public renderInteractionPrompt(ctx: CanvasRenderingContext2D, player: Player): void {
+    const activeZone = this.getActiveZone();
+    if (!activeZone) return;
+
+    // Only show prompt if player is near the active zone
+    const isNear = this.isNearActiveZone(player);
+    if (!isNear) return;
+
+    ctx.save();
+
+    // Get action text based on the zone
+    const actionText = this.getActionText();
+
+    const promptX = activeZone.x + activeZone.width / 2;
+
+    // If zone is near the top (y < 50), show prompt below instead of above
+    const showBelow = activeZone.y < 50;
+    const promptY = showBelow
+      ? activeZone.y + activeZone.height + 50  // Below the zone
+      : activeZone.y - 40;                      // Above the zone
+
+    // Measure text to calculate proper width
+    ctx.font = 'bold 14px Arial';
+    const textWidth = ctx.measureText(actionText).width;
+    const padding = 20; // Padding on each side
+    const boxWidth = textWidth + (padding * 2);
+    const boxHeight = 28;
+
+    // Background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
+
+    // Border
+    ctx.strokeStyle = 'rgba(255, 228, 181, 1)'; // Moccasin color
+    ctx.lineWidth = 2;
+    ctx.strokeRect(promptX - boxWidth / 2, promptY - 20, boxWidth, boxHeight);
+
+    // Text
+    ctx.fillStyle = 'rgba(255, 228, 181, 1)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(actionText, promptX, promptY - 6);
+
+    ctx.restore();
+  }
+
+  private isNearActiveZone(player: Player): boolean {
+    const activeZone = this.getActiveZone();
+    if (!activeZone) return false;
+
+    const playerCenterX = player.x + player.width / 2;
+    const playerCenterY = player.y + player.height / 2;
+    const zoneCenterX = activeZone.x + activeZone.width / 2;
+    const zoneCenterY = activeZone.y + activeZone.height / 2;
+
+    const distance = Math.sqrt(
+      Math.pow(playerCenterX - zoneCenterX, 2) + Math.pow(playerCenterY - zoneCenterY, 2),
+    );
+
+    return distance <= this.INTERACTION_RADIUS;
+  }
+
+  private getActionText(): string {
+    switch (this.currentStep) {
+      case BakingStep.IDLE:
+        return 'Press B: Get Ingredients';
+      case BakingStep.HAS_INGREDIENTS:
+        return 'Press B: Make Dough';
+      case BakingStep.HAS_DOUGH:
+        return 'Press B: Bake';
+      default:
+        return '';
+    }
+  }
 }

@@ -661,6 +661,9 @@ export class Game {
     // Render interaction prompts (must be after NPCs and player for proper layering)
     this.npcManager.renderInteractionPrompts(this.ctx);
 
+    // Render baking interaction prompt
+    this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
+
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(
       this.ctx,
