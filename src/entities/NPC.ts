@@ -115,9 +115,8 @@ export class NPC {
   }
 
   public getNextDialog(): string {
-    const dialog = this.dialogLines[this.currentDialogIndex];
     this.currentDialogIndex = (this.currentDialogIndex + 1) % this.dialogLines.length;
-    return dialog;
+    return this.dialogLines[this.currentDialogIndex];
   }
 
   public getCurrentDialog(): string {
