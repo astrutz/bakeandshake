@@ -291,6 +291,23 @@
   overflow: auto;
   padding-right: 6px;
   flex: 1;
+  scrollbar-color: #7b3f1f transparent;
+}
+
+.recipe-page-body::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+
+.recipe-page-body::-webkit-scrollbar-thumb {
+  background: #c77a3e;
+  border: 2px solid #7b3f1f;
+  box-shadow: inset 0 0 0 2px #f2bf74;
+  border-radius: 999px;
+}
+
+.recipe-page-body::-webkit-scrollbar-thumb:hover {
+  background: #d88946;
 }
 
 .recipe-page-section {
