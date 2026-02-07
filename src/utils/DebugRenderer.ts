@@ -77,14 +77,14 @@ export class DebugRenderer {
 
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(5, 5, 300, 140); // Increased size
+    ctx.fillRect(5, 5, 300, 140);
 
     ctx.fillStyle = Colors.green;
-    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`; // Was 14px
+    ctx.font = `${Fonts.sizes.small} ${Fonts.body}`;
     ctx.textAlign = 'left';
 
-    let yPos = 28; // Was 25
-    const lineHeight = 24; // Was 20
+    let yPos = 28;
+    const lineHeight = 24;
 
     ctx.fillText(`Player: (${Math.round(data.player.x)}, ${Math.round(data.player.y)})`, 15, yPos);
     yPos += lineHeight;

@@ -40,9 +40,10 @@ npm run build
 
 
 ### Game Controls
-| Key | Action |
-|-----|--------|
-| `P` | Pause/Resume game |
+| Key             | Action              |
+|-----------------|---------------------|
+| `P` or `Escape` | Pause/Resume game   |
+| `M`             | Start or stop music |
 
 ### Debug
 | Key | Action |

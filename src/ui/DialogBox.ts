@@ -14,7 +14,7 @@ export class DialogBox {
 
   // Box styling (scaled for 1024x768)
   private padding: number = UI.padding.medium;
-  private boxHeight: number = 180; // Was 150
+  private boxHeight: number = 180;
   private borderWidth: number = UI.borderWidth.thick;
 
   // Colors
@@ -109,7 +109,7 @@ export class DialogBox {
     const maxWidth = boxWidth - this.padding * 2 - this.borderWidth * 2;
     const lines = this.wrapText(ctx, this.displayedText, maxWidth);
 
-    const lineHeight = 32; // Was 28
+    const lineHeight = 32;
     const textX = boxX + this.padding + this.borderWidth;
     const textY = boxY + this.padding + this.borderWidth;
 
@@ -127,7 +127,7 @@ export class DialogBox {
       // Blink effect
       if (Math.floor(Date.now() / 500) % 2 === 0) {
         ctx.fillStyle = this.textColor;
-        ctx.fillRect(cursorX, cursorY, 14, 24); // Was 12, 20
+        ctx.fillRect(cursorX, cursorY, 14, 24);
       }
     }
 
