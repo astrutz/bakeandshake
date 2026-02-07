@@ -37,7 +37,7 @@ export function createRecipeBookMarkup(recipes: RecipeCard[]) {
                     </div>
                     <div class="recipe-cover-subtitle">Bake 'n Shake</div>
                   </div>
-                  <img alt="Croissant" class="recipe-cover-icon" src="/croissant.png" />
+                  <img alt="Croissant" class="recipe-cover-icon" src="/recipes/croissant.png" />
                   <div class="recipe-cover-authors">
                     <span>Alex Strutz</span>
                     <span>Christin Zieba</span>
