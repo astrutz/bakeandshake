@@ -1,4 +1,4 @@
-import type { RecipeCard } from './recipe-book-data';
+import type { RecipeCard } from './RecipeBookData.ts';
 
 export function createRecipeBookMarkup(recipes: RecipeCard[]) {
   return `

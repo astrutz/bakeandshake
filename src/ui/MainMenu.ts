@@ -1,4 +1,4 @@
-import { Colors, Fonts, UI } from '../../config/theme';
+import { Colors, Fonts, UI } from '../config/theme.ts';
 
 type MainMenuActions = {
   onStart: () => void;

@@ -1,7 +1,7 @@
-import './recipe-book.css';
+import './RecipeBook.css';
 
-import { DEFAULT_RECIPES } from './recipe-book-data';
-import { createRecipeBookMarkup } from './recipe-book-template';
+import { DEFAULT_RECIPES } from './RecipeBookData.ts';
+import { createRecipeBookMarkup } from './RecipeBookTemplate.ts';
 
 export function initRecipeBookOverview(trigger?: HTMLElement | null) {
   const defaultFocusTarget = trigger ?? document.querySelector<HTMLElement>('#recipe-book');
