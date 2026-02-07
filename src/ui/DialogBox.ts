@@ -94,12 +94,15 @@ export class DialogBox {
       boxX + this.borderWidth,
       boxY + this.borderWidth,
       boxWidth - this.borderWidth * 2,
-      this.boxHeight - this.borderWidth * 2
+      this.boxHeight - this.borderWidth * 2,
     );
+
+    ctx.save();
 
     // Draw text
     ctx.fillStyle = this.textColor;
     ctx.font = `${Fonts.sizes.medium} ${Fonts.monospace}`;
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
 
     // Word wrap the text
@@ -127,6 +130,8 @@ export class DialogBox {
         ctx.fillRect(cursorX, cursorY, 14, 24); // Was 12, 20
       }
     }
+
+    ctx.restore();
   }
 
   private wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
