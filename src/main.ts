@@ -40,7 +40,7 @@ soundManager.registerSound(SOUND_IDS.BACKGROUND_WIND, '/audio/gehaltsverhandlung
   loop: true,
 });
 soundManager.registerSound(SOUND_IDS.BACKGROUND_COFFEE, '/audio/coffee-ambience-v2.mp3', {
-  volume: 0.1,
+  volume: 0.2,
   loop: true,
 });
 
