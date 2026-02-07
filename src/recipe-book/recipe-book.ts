@@ -12,7 +12,7 @@ type RecipeCard = {
 
 const DEFAULT_RECIPES: RecipeCard[] = [
   {
-    title: 'Mona\'s Dinkelbrot',
+    title: "Mona's Dinkelbrot",
     time: '1 h 5 min',
     difficulty: 'Einfach',
     blurb: 'Ein sehr einfaches Brot mit Übernachtgare und knuspriger Kruste.',
@@ -83,20 +83,26 @@ const DEFAULT_RECIPES: RecipeCard[] = [
 
 function createRecipeBookMarkup(recipes: RecipeCard[]) {
   return `
-    <div class="recipe-book-panel" role="dialog" aria-modal="true" aria-label="Recipe book overview">
+    <div aria-label="Recipe book overview" aria-modal="true" class="recipe-book-panel" role="dialog">
       <div class="recipe-book-content">
         <div class="recipe-book-close-wrapper">
           <button
-            class="recipe-book-close"
-            type="button"
-            data-recipe-book-close
             aria-label="Close book"
+            class="recipe-book-close"
+            data-recipe-book-close
+            type="button"
           >
-            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <svg aria-hidden="true" class="recipe-book-icon" viewBox="0 0 24 24">
               <path d="M6 6l12 12M18 6l-12 12" />
             </svg>
           </button>
         </div>  
+        <div class="recipe-book-nav">
+        <button aria-label="Previous page" class="recipe-book-arrow" data-recipe-book-prev type="button">
+            <svg aria-hidden="true" class="recipe-book-icon" viewBox="0 0 24 24">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </button>
         <div class="recipe-book-pages" data-recipe-book-pages>
           <article class="recipe-page recipe-page-cover is-active" data-recipe-page="0">
             <div class="recipe-page-inner recipe-cover-inner">
@@ -107,7 +113,7 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
                 </div>
                 <div class="recipe-cover-subtitle">Bake 'n Shake</div>
                 </div>
-                <img class="recipe-cover-icon" src="/croissant.png" alt="Croissant" />
+                <img alt="Croissant" class="recipe-cover-icon" src="/croissant.png" />
                 <div class="recipe-cover-authors">
                   <span>Alex Strutz</span>
                   <span>Christin Zieba</span>
@@ -173,14 +179,9 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
             </div>
           </article>
         </div>
-        <div class="recipe-book-nav">
-          <button class="recipe-book-arrow" type="button" data-recipe-book-prev aria-label="Previous page">
-            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 5l-7 7 7 7" />
-            </svg>
-          </button>
-          <button class="recipe-book-arrow" type="button" data-recipe-book-next aria-label="Next page">
-            <svg class="recipe-book-icon" viewBox="0 0 24 24" aria-hidden="true">
+          
+          <button aria-label="Next page" class="recipe-book-arrow" data-recipe-book-next type="button">
+            <svg aria-hidden="true" class="recipe-book-icon" viewBox="0 0 24 24">
               <path d="M9 5l7 7-7 7" />
             </svg>
           </button>
