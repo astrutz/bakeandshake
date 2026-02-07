@@ -190,6 +190,7 @@ export class Game {
     } else if (selection === 'menu') {
       // Return to main menu (for now, just restart level 1)
       console.log('📋 Returning to main menu...');
+      // todo: Show main menu instead of restarting @Mona
       this.currentLevel = 1;
       this.customerManager.clear();
       this.player.setMovementLocked(false);

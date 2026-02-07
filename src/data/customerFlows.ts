@@ -37,6 +37,35 @@ const level1Flow: CustomerFlowLevel = {
           xp: 15,
         },
       },
+      arrivalTime: 1,
+    },
+  ],
+};
+
+const level2Flow: CustomerFlowLevel = {
+  level: 2,
+  customers: [
+    {
+      // First customer - arrives immediately
+      npcConfig: {
+        id: 'customer_1',
+        name: 'Mrs. Baker',
+        x: 600,
+        y: 400,
+        dialogLines: [
+          'Hello! I would like to buy 2 loaves of bread please.',
+          'Thank you! These look delicious!',
+        ],
+      },
+      order: {
+        customerId: 'customer_1',
+        item: 'bread',
+        quantity: 2,
+        reward: {
+          coins: 20,
+          xp: 15,
+        },
+      },
       arrivalTime: 5,
     },
     {
@@ -93,7 +122,7 @@ const level1Flow: CustomerFlowLevel = {
  */
 export const CUSTOMER_FLOWS: Record<number, CustomerFlowLevel> = {
   1: level1Flow,
-  2: level1Flow,
+  2: level2Flow,
   // todo Add more levels here later
 };
 
