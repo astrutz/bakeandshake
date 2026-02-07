@@ -32,6 +32,13 @@ npm run build
 | `Space` or `Enter` | Skip dialog typing / Close dialog when complete |
 | `Escape` | Close dialog immediately |
 
+### Baking & Serving
+| Key | Action |
+|-----|--------|
+| `B` | Baking workflow (context-sensitive) |
+| `O` | Deliver order to nearby customer |
+
+
 ### Game Controls
 | Key | Action |
 |-----|--------|

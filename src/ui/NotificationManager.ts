@@ -30,7 +30,7 @@ export class NotificationManager {
     console.log(`📢 ${message}`);
   }
 
-  public update(deltaTime: number): void {
+  public update(): void {
     const now = Date.now();
     // Remove expired notifications
     this.notifications = this.notifications.filter(

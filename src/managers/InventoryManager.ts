@@ -114,7 +114,7 @@ export class InventoryManager {
   /**
    * Render inventory display
    */
-  public render(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number): void {
+  public render(ctx: CanvasRenderingContext2D): void {
     ctx.save();
 
     // Position in top-left corner

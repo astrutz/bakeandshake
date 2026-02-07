@@ -16,7 +16,7 @@ import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
 import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
-import { BakingManager, BakingStep } from './managers/BakingManager';
+import { BakingManager } from './managers/BakingManager';
 import { NotificationManager } from './ui/NotificationManager.ts';
 
 export class Game {
@@ -536,7 +536,7 @@ export class Game {
     this.levelCompleteScreen.update(deltaTime);
 
     // Update notification manager
-    this.notificationManager.update(deltaTime);
+    this.notificationManager.update();
 
     // Don't update game state if paused
     if (this.pauseMenu.isPausedState() || this.levelCompleteScreen.isVisibleState()) {
@@ -650,8 +650,8 @@ export class Game {
     // Render notifications
     this.notificationManager.render(this.ctx, this.canvas.width, this.canvas.height);
 
-    // Render inventory (top-left corner) - ADD THIS
-    this.inventoryManager.render(this.ctx, this.canvas.width, this.canvas.height);
+    // Render inventory (top-left corner)
+    this.inventoryManager.render(this.ctx);
 
     // Render player
     this.player.render(this.ctx);
