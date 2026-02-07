@@ -3,7 +3,7 @@ import { Game } from './game';
 import { AmbientAudioManager } from './audio/AmbientAudioManager.ts';
 import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
-import { initRecipeBookOverview } from './recipe-book/recipe-book';
+import { initRecipeBookOverview } from './ui/recipe-book/recipe-book.ts';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');

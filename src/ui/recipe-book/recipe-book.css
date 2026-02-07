@@ -37,8 +37,7 @@
 }
 
 .recipe-book-overlay.is-closing {
-  opacity: 0;
-  transform: scale(0.98);
+  display: none;
 }
 
 .recipe-book-panel {
@@ -253,6 +252,7 @@
   object-fit: cover;
   border-radius: 10px;
   margin-bottom: 10px;
+  pointer-events: none;
 }
 
 

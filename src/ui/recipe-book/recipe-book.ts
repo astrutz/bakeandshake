@@ -131,43 +131,43 @@ function createRecipeBookMarkup(recipes: RecipeCard[]) {
               </div>
             </div>
           </article>
-          ${recipes
-            .map(
-              (recipe, index) => `
-                <article class="recipe-page" data-recipe-page="${index + 1}">
+          ${ recipes
+    .map(
+      (recipe, index) => `
+                <article class="recipe-page" data-recipe-page="${ index + 1 }">
                   <div class="recipe-page-inner">
-                    <img class="recipe-page-image" src="${recipe.image}" alt="${recipe.imageAlt}" />
+                    <img class="recipe-page-image" src="${ recipe.image }" alt="${ recipe.imageAlt }" />
                     <div class="recipe-page-header">
                       <div>
-                        <h3>${recipe.title}</h3>
-                        <p>${recipe.blurb}</p>
+                        <h3>${ recipe.title }</h3>
+                        <p>${ recipe.blurb }</p>
                       </div>
-                      <div class="recipe-book-badge">${recipe.badge}</div>
+                      <div class="recipe-book-badge">${ recipe.badge }</div>
                     </div>
                     <div class="recipe-page-meta">
-                      <span>${recipe.time}</span>
-                      <span>${recipe.difficulty}</span>
+                      <span>${ recipe.time }</span>
+                      <span>${ recipe.difficulty }</span>
                     </div>
                     <div class="recipe-page-body">
                       <div class="recipe-page-section">
                         <h4>Zutaten</h4>
                         <ul>
-                          ${recipe.ingredients.map((item) => `<li>${item}</li>`).join('')}
+                          ${ recipe.ingredients.map((item) => `<li>${ item }</li>`).join('') }
                         </ul>
                       </div>
                       <div class="recipe-page-section">
                         <h4>Schritte</h4>
                         <ol>
-                          ${recipe.steps.map((step) => `<li>${step}</li>`).join('')}
+                          ${ recipe.steps.map((step) => `<li>${ step }</li>`).join('') }
                         </ol>
                       </div>
                     </div>
                   </div>
                 </article>
               `,
-            )
-            .join('')}
-          <article class="recipe-page recipe-page-back" data-recipe-page="${recipes.length + 1}">
+    )
+    .join('') }
+          <article class="recipe-page recipe-page-back" data-recipe-page="${ recipes.length + 1 }">
             <div class="recipe-page-inner recipe-cover-inner">
               <div class="recipe-cover-frame">
                 <div>
@@ -206,164 +206,164 @@ export function initRecipeBookOverview() {
     return;
   }
 
-  const overlay = document.createElement('div');
-  overlay.className = 'recipe-book-overlay';
-  overlay.setAttribute('aria-hidden', 'true');
-  overlay.innerHTML = createRecipeBookMarkup(DEFAULT_RECIPES);
-
-  document.body.appendChild(overlay);
-
-  const closeButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-close]');
-  const pages = Array.from(overlay.querySelectorAll<HTMLElement>('[data-recipe-page]'));
-  const pagesRoot = overlay.querySelector<HTMLDivElement>('[data-recipe-book-pages]');
-  const prevButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-prev]');
-  const nextButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-next]');
-
-  let currentIndex = 0;
-  let isDragging = false;
-  let dragStartX = 0;
-  let dragTarget: HTMLElement | null = null;
-  let dragDirection: 'next' | 'prev' | null = null;
-  const forwardDuration = '1s';
-  const backwardDuration = '0.6s';
-
-  const updatePages = () => {
-    pagesRoot?.style.setProperty('--flip-duration', forwardDuration);
-    pages.forEach((page, index) => {
-      page.style.zIndex = String(pages.length - index);
-      page.style.transform = '';
-      if (index < currentIndex) {
-        page.classList.add('is-flipped');
-        page.classList.remove('is-active');
-        page.style.pointerEvents = 'none';
-      } else if (index === currentIndex) {
-        page.classList.remove('is-flipped');
-        page.classList.add('is-active');
-        page.style.pointerEvents = 'auto';
-      } else {
-        page.classList.remove('is-flipped');
-        page.classList.remove('is-active');
-        page.style.pointerEvents = 'none';
-      }
-    });
-
-    if (prevButton) {
-      prevButton.disabled = currentIndex === 0;
-    }
-    if (nextButton) {
-      nextButton.disabled = currentIndex === pages.length - 1;
-    }
-  };
-
   const open = () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'recipe-book-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = createRecipeBookMarkup(DEFAULT_RECIPES);
+
+    document.body.appendChild(overlay);
+
+    const closeButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-close]');
+    const pages = Array.from(overlay.querySelectorAll<HTMLElement>('[data-recipe-page]'));
+    const pagesRoot = overlay.querySelector<HTMLDivElement>('[data-recipe-book-pages]');
+    const prevButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-prev]');
+    const nextButton = overlay.querySelector<HTMLButtonElement>('[data-recipe-book-next]');
+
+    let currentIndex = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragTarget: HTMLElement | null = null;
+    let dragDirection: 'next' | 'prev' | null = null;
+    const forwardDuration = '1s';
+    const backwardDuration = '0.6s';
+
+    const updatePages = () => {
+      pagesRoot?.style.setProperty('--flip-duration', forwardDuration);
+      pages.forEach((page, index) => {
+        page.style.zIndex = String(pages.length - index);
+        page.style.transform = '';
+        if (index < currentIndex) {
+          page.classList.add('is-flipped');
+          page.classList.remove('is-active');
+          page.style.pointerEvents = 'none';
+        } else if (index === currentIndex) {
+          page.classList.remove('is-flipped');
+          page.classList.add('is-active');
+          page.style.pointerEvents = 'auto';
+        } else {
+          page.classList.remove('is-flipped');
+          page.classList.remove('is-active');
+          page.style.pointerEvents = 'none';
+        }
+      });
+
+      if (prevButton) {
+        prevButton.disabled = currentIndex === 0;
+      }
+      if (nextButton) {
+        nextButton.disabled = currentIndex === pages.length - 1;
+      }
+    };
+
+    const close = () => {
+      overlay.classList.add('is-closing');
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      currentIndex = 0;
+      updatePages();
+      window.setTimeout(() => {
+        overlay.remove();
+        trigger.focus();
+      }, 520);
+    };
+
     overlay.classList.remove('is-closing');
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden', 'false');
     updatePages();
     closeButton?.focus();
-  };
 
-  const close = () => {
-    overlay.classList.add('is-closing');
-    overlay.classList.remove('is-open');
-    overlay.setAttribute('aria-hidden', 'true');
-    currentIndex = 0;
-    updatePages();
-    window.setTimeout(() => {
-      overlay.classList.remove('is-closing');
-      trigger.focus();
-    }, 520);
+    closeButton?.addEventListener('click', close);
+
+    prevButton?.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        pagesRoot?.style.setProperty('--flip-duration', backwardDuration);
+        currentIndex -= 1;
+        updatePages();
+      }
+    });
+
+    nextButton?.addEventListener('click', () => {
+      if (currentIndex < pages.length - 1) {
+        currentIndex += 1;
+        updatePages();
+      }
+    });
+
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) {
+        close();
+      }
+    });
+
+    pagesRoot?.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      if ((event.target as HTMLElement | null)?.closest('button')) return;
+      const page = pages[currentIndex];
+      if (!page) return;
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragTarget = page;
+      dragDirection = null;
+      pagesRoot.setPointerCapture(event.pointerId);
+    });
+
+    pagesRoot?.addEventListener('pointermove', (event) => {
+      if (!isDragging || !dragTarget || !pagesRoot) return;
+      const rect = pagesRoot.getBoundingClientRect();
+      const deltaX = event.clientX - dragStartX;
+      const progress = Math.max(-1, Math.min(1, deltaX / rect.width));
+
+      if (progress < 0) {
+        if (currentIndex >= pages.length - 1) {
+          dragDirection = null;
+          dragTarget.style.transform = '';
+          return;
+        }
+        dragDirection = 'next';
+        pagesRoot.style.setProperty('--flip-duration', forwardDuration);
+        const rotation = Math.max(-180, progress * 180);
+        dragTarget.style.transform = `rotateY(${rotation}deg)`;
+      } else if (progress > 0 && currentIndex > 0) {
+        dragDirection = 'prev';
+        pagesRoot.style.setProperty('--flip-duration', backwardDuration);
+        const prevPage = pages[currentIndex - 1];
+        dragTarget = prevPage;
+        const rotation = -180 + progress * 180;
+        prevPage.style.transform = `rotateY(${Math.min(0, rotation)}deg)`;
+      } else {
+        dragDirection = null;
+      }
+    });
+
+    pagesRoot?.addEventListener('pointerup', (event) => {
+      if (!isDragging) return;
+      isDragging = false;
+      pagesRoot.releasePointerCapture(event.pointerId);
+      const deltaX = event.clientX - dragStartX;
+      const rect = pagesRoot.getBoundingClientRect();
+      const progress = deltaX / rect.width;
+
+      if (dragDirection === 'next' && progress < -0.3 && currentIndex < pages.length - 1) {
+        currentIndex += 1;
+      } else if (dragDirection === 'prev' && progress > 0.3 && currentIndex > 0) {
+        currentIndex -= 1;
+      }
+
+      dragTarget = null;
+      dragDirection = null;
+      updatePages();
+    });
+
+    pagesRoot?.addEventListener('pointercancel', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      dragTarget = null;
+      dragDirection = null;
+      updatePages();
+    });
   };
 
   trigger.addEventListener('click', open);
-
-  closeButton?.addEventListener('click', close);
-
-  prevButton?.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      pagesRoot?.style.setProperty('--flip-duration', backwardDuration);
-      currentIndex -= 1;
-      updatePages();
-    }
-  });
-
-  nextButton?.addEventListener('click', () => {
-    if (currentIndex < pages.length - 1) {
-      currentIndex += 1;
-      updatePages();
-    }
-  });
-
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      close();
-    }
-  });
-
-  pagesRoot?.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return;
-    if ((event.target as HTMLElement | null)?.closest('button')) return;
-    const page = pages[currentIndex];
-    if (!page) return;
-    isDragging = true;
-    dragStartX = event.clientX;
-    dragTarget = page;
-    dragDirection = null;
-    pagesRoot.setPointerCapture(event.pointerId);
-  });
-
-  pagesRoot?.addEventListener('pointermove', (event) => {
-    if (!isDragging || !dragTarget || !pagesRoot) return;
-    const rect = pagesRoot.getBoundingClientRect();
-    const deltaX = event.clientX - dragStartX;
-    const progress = Math.max(-1, Math.min(1, deltaX / rect.width));
-
-    if (progress < 0) {
-      if (currentIndex >= pages.length - 1) {
-        dragDirection = null;
-        dragTarget.style.transform = '';
-        return;
-      }
-      dragDirection = 'next';
-      pagesRoot.style.setProperty('--flip-duration', forwardDuration);
-      const rotation = Math.max(-180, progress * 180);
-      dragTarget.style.transform = `rotateY(${rotation}deg)`;
-    } else if (progress > 0 && currentIndex > 0) {
-      dragDirection = 'prev';
-      pagesRoot.style.setProperty('--flip-duration', backwardDuration);
-      const prevPage = pages[currentIndex - 1];
-      dragTarget = prevPage;
-      const rotation = -180 + progress * 180;
-      prevPage.style.transform = `rotateY(${Math.min(0, rotation)}deg)`;
-    } else {
-      dragDirection = null;
-    }
-  });
-
-  pagesRoot?.addEventListener('pointerup', (event) => {
-    if (!isDragging) return;
-    isDragging = false;
-    pagesRoot.releasePointerCapture(event.pointerId);
-    const deltaX = event.clientX - dragStartX;
-    const rect = pagesRoot.getBoundingClientRect();
-    const progress = deltaX / rect.width;
-
-    if (dragDirection === 'next' && progress < -0.3 && currentIndex < pages.length - 1) {
-      currentIndex += 1;
-    } else if (dragDirection === 'prev' && progress > 0.3 && currentIndex > 0) {
-      currentIndex -= 1;
-    }
-
-    dragTarget = null;
-    dragDirection = null;
-    updatePages();
-  });
-
-  pagesRoot?.addEventListener('pointercancel', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    dragTarget = null;
-    dragDirection = null;
-    updatePages();
-  });
 }
