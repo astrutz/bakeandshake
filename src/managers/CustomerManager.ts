@@ -26,13 +26,16 @@ export class CustomerManager {
   // Callbacks
   private onCustomerArrive?: (customer: CustomerQueueEntry) => void;
   private onOrderComplete?: (order: CustomerOrder, rewards: { coins: number; xp: number }) => void;
+  private onVisibilityChange?: () => void; // New: callback when customer visibility changes
 
   constructor(
     onCustomerArrive?: (customer: CustomerQueueEntry) => void,
     onOrderComplete?: (order: CustomerOrder, rewards: { coins: number; xp: number }) => void,
+    onVisibilityChange?: () => void,
   ) {
     this.onCustomerArrive = onCustomerArrive;
     this.onOrderComplete = onOrderComplete;
+    this.onVisibilityChange = onVisibilityChange;
   }
 
   /**
@@ -78,6 +81,11 @@ export class CustomerManager {
     console.log(`👤 Customer arrived: ${customer.npc.name}`);
     console.log(`📋 Order: ${customer.order.quantity}x ${customer.order.item}`);
 
+    // Trigger visibility change callback to update collisions
+    if (this.onVisibilityChange) {
+      this.onVisibilityChange();
+    }
+
     if (this.onCustomerArrive) {
       this.onCustomerArrive(customer);
     }
@@ -98,6 +106,11 @@ export class CustomerManager {
 
     console.log(`✅ Order completed for ${customer.npc.name}`);
     console.log(`💰 Rewards: ${customer.order.reward.coins} coins, ${customer.order.reward.xp} XP`);
+
+    // Trigger visibility change callback to update collisions
+    if (this.onVisibilityChange) {
+      this.onVisibilityChange();
+    }
 
     if (this.onOrderComplete) {
       this.onOrderComplete(customer.order, customer.order.reward);

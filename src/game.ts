@@ -108,6 +108,12 @@ export class Game {
       this.handleOrderComplete.bind(this),
     );
 
+    this.customerManager = new CustomerManager(
+      this.handleCustomerArrive.bind(this),
+      this.handleOrderComplete.bind(this),
+      this.handleCustomerVisibilityChange.bind(this), // Add this
+    );
+
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
 
@@ -150,6 +156,13 @@ export class Game {
       const npc = this.npcManager.addNPC(customerData.npcConfig);
       this.customerManager.scheduleCustomer(npc, customerData.order, customerData.arrivalTime);
     });
+  }
+
+  private handleCustomerVisibilityChange() {
+    // Rebuild collisions when customer visibility changes
+    this.collisionSystem.clearCollisionRects();
+    this.collisionSystem.addCollisionRects(testCollisions);
+    this.npcManager.updateCollisions();
   }
 
   private handleCustomerArrive(customer: CustomerQueueEntry) {
