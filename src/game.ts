@@ -134,9 +134,12 @@ export class Game {
     this.tryAutoLoad();
 
     // Start level 1
-    this.startLevel(1);
+    this.startLevel(2);
   }
 
+  /**
+   * Starte ein Level - OHNE Wave Spawner (klassisches System)
+   */
   private startLevel(level: number) {
     this.currentLevel = level;
     const customerFlow = getCustomerFlow(level);
@@ -146,13 +149,86 @@ export class Game {
       return;
     }
 
-    console.log(`🎮 Starting Level ${level}`);
+    console.log(`\n🎮 Starting Level ${level}`);
+    console.log(`📊 customerFlow.customers.length: ${customerFlow.customers.length}`);
+    console.log(`📊 customerFlow.waveSpawner:`, customerFlow.waveSpawner);
+    console.log(
+      `📊 customerFlow.pathConfigs:`,
+      Object.keys(customerFlow.pathConfigs || {}).length,
+      'paths',
+    );
 
-    // Schedule all customers for this level
-    customerFlow.customers.forEach((customerData) => {
-      const npc = this.npcManager.addNPC(customerData.npcConfig);
-      this.customerManager.scheduleCustomer(npc, customerData.order, customerData.arrivalTime);
-    });
+    // Prüfe, ob Wave Spawner für dieses Level aktiviert ist
+    if (customerFlow.waveSpawner?.enabled) {
+      console.log(`\n🌊 Wave Spawner ENABLED`);
+      console.log(`   ├─ Interval: ${customerFlow.waveSpawner.waveInterval}s`);
+      console.log(`   ├─ NPCs/Wave: ${customerFlow.waveSpawner.npcPerWave}`);
+      console.log(`   ├─ NPCs Spawnduration: ${customerFlow.waveSpawner.delayBetweenNPCsInWave}`);
+      console.log(`   └─ Total customers: ${customerFlow.customers.length}`);
+
+      // Registriere die Pfad-Konfigurationen im CustomerManager ZUERST
+      if (customerFlow.pathConfigs) {
+        console.log(`\n📍 Registering path configs...`);
+        this.customerManager.registerPathConfigs(customerFlow.pathConfigs);
+      }
+
+      // Erstelle NPCs für ALLE Kunden
+      const customersForWaves: Array<{ npc: NPC; order: any }> = [];
+
+      console.log(`\n🎯 Creating NPCs...`);
+      for (let i = 0; i < customerFlow.customers.length; i++) {
+        const customerData = customerFlow.customers[i];
+        console.log(
+          `   [${i + 1}/${customerFlow.customers.length}] Creating NPC: ${customerData.npcConfig.name} (ID: ${customerData.order.customerId})`,
+        );
+
+        const npc = this.npcManager.addNPC(customerData.npcConfig);
+
+        customersForWaves.push({
+          npc,
+          order: customerData.order,
+        });
+
+        console.log(`   ✅ NPC added to customersForWaves`);
+      }
+
+      console.log(`\n📦 customersForWaves prepared with ${customersForWaves.length} customers`);
+
+      // Konfiguriere und starte Wave Spawner
+      console.log(`\n⚙️  Configuring Wave Spawner...`);
+      this.customerManager.configureWaveSpawner(customerFlow.waveSpawner);
+
+      console.log(`🚀 Starting Wave Spawner with ${customersForWaves.length} customers...`);
+      this.customerManager.startWaveSpawner(customersForWaves);
+
+      // Setze Pfade für alle NPCs
+      if (customerFlow.pathConfigs) {
+        console.log(`\n🛣️  Setting paths for NPCs...`);
+        for (const [customerId, pathConfig] of Object.entries(customerFlow.pathConfigs)) {
+          console.log(`   Setting path for: ${customerId}`);
+          const npc = this.npcManager.getNPC(customerId);
+          if (npc) {
+            this.npcManager.setNPCPath(customerId, pathConfig as any);
+            console.log(`   ✅ Path set`);
+          } else {
+            console.warn(`   ⚠️  NPC ${customerId} not found in npcManager!`);
+          }
+        }
+      }
+
+      console.log(`\n✨ Level ${level} initialized with Wave Spawner\n`);
+    } else {
+      // Nutze klassisches System (ohne Wave Spawner)
+      console.log(`📌 Wave Spawner DISABLED - Using classic system\n`);
+
+      customerFlow.customers.forEach((customerData, index) => {
+        console.log(
+          `[${index + 1}/${customerFlow.customers.length}] Scheduling: ${customerData.npcConfig.name}`,
+        );
+        const npc = this.npcManager.addNPC(customerData.npcConfig);
+        this.customerManager.scheduleCustomer(npc, customerData.order, customerData.arrivalTime);
+      });
+    }
   }
 
   private handleCustomerVisibilityChange() {
@@ -190,6 +266,7 @@ export class Game {
     } else if (selection === 'menu') {
       // Return to main menu (for now, just restart level 1)
       console.log('📋 Returning to main menu...');
+      // todo: Show main menu instead of restarting @Mona
       this.currentLevel = 1;
       this.customerManager.clear();
       this.player.setMovementLocked(false);
@@ -216,7 +293,7 @@ export class Game {
       this.startLevel(this.currentLevel);
     } else {
       // No more levels - show victory screen or loop back
-      console.log('🏆 You\'ve completed all levels!');
+      console.log("🏆 You've completed all levels!");
       this.currentLevel = 1;
       this.startLevel(1);
     }
@@ -545,8 +622,8 @@ export class Game {
     // Update camera to follow player
     this.updateCamera();
 
-    // Update NPCs (check for nearby NPCs)
-    this.npcManager.update(this.player);
+    // WICHTIG: Update NPCs mit deltaTime!
+    this.npcManager.update(this.player, deltaTime);
 
     // Update dialog box
     this.dialogBox.update(deltaTime);

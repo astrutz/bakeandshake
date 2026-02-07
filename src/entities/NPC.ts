@@ -9,8 +9,25 @@ export interface NPCConfig {
   width?: number;
   height?: number;
   spritePath?: string;
+  spriteSheet?: {
+    row: number;
+    col: number;
+    width: number;
+    height: number;
+  };
   dialogLines: string[];
   interactionRadius?: number;
+}
+
+/**
+ * Konfiguration für NPC Bewegung entlang eines Pfades
+ */
+export interface NPCPathConfig {
+  enabled: boolean;
+  path: Array<{ x: number; y: number }>;
+  speed: number;
+  targetPosition?: { x: number; y: number };
+  loop: boolean;
 }
 
 export class NPC {
@@ -27,6 +44,11 @@ export class NPC {
   private sprite: HTMLImageElement | null = null;
   private spriteLoaded: boolean = false;
   private currentDialogIndex: number = 0;
+  private spriteSheetConfig: NPCConfig['spriteSheet'] | null = null;
+
+  // Pfad-Bewegung
+  private pathConfig: NPCPathConfig | null = null;
+  private currentWaypointIndex: number = 0;
 
   constructor(config: NPCConfig) {
     this.id = config.id;
@@ -39,6 +61,7 @@ export class NPC {
     this.interactionRadius = config.interactionRadius || GameConfig.npc.defaultInteractionRadius;
 
     if (config.spritePath) {
+      this.spriteSheetConfig = config.spriteSheet || null;
       this.loadSprite(config.spritePath);
     }
   }
@@ -56,11 +79,110 @@ export class NPC {
     this.sprite.src = path;
   }
 
+  /**
+   * Setze einen Pfad für den NPC
+   */
+  public setPath(pathConfig: NPCPathConfig) {
+    this.pathConfig = pathConfig;
+    this.currentWaypointIndex = 0;
+    console.log(
+      `🛣️  NPC ${this.name} Pfad gesetzt: ${pathConfig.path.length} Waypoints, Geschwindigkeit: ${pathConfig.speed}px/s`,
+    );
+  }
+
+  /**
+   * Update NPC Position basierend auf Pfad
+   */
+  public updatePath(deltaTime: number) {
+    if (!this.pathConfig?.enabled || !this.pathConfig.path || this.pathConfig.path.length === 0) {
+      return;
+    }
+
+    // console.log('Walking: ', this.x, this.y);
+
+    if (this.currentWaypointIndex < this.pathConfig.path.length) {
+      const currentWaypoint = this.pathConfig.path[this.currentWaypointIndex];
+      const npcCenterX = this.x + this.width / 2;
+      const npcCenterY = this.y + this.height / 2;
+
+      const dx = currentWaypoint.x - npcCenterX;
+      const dy = currentWaypoint.y - npcCenterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Wenn wir beim Waypoint angekommen sind
+      if (distance < 10) {
+        this.currentWaypointIndex++;
+        console.log(`✅ NPC ${this.name} erreichte Waypoint ${this.currentWaypointIndex}`);
+
+        if (this.currentWaypointIndex >= this.pathConfig.path.length) {
+          if (this.pathConfig.targetPosition) {
+            this.x = this.pathConfig.targetPosition.x - this.width / 2;
+            this.y = this.pathConfig.targetPosition.y - this.height / 2;
+          }
+
+          if (this.pathConfig.loop) {
+            this.currentWaypointIndex = 0;
+          } else {
+            this.pathConfig.enabled = false;
+            console.log(`🎯 NPC ${this.name} hat Ziel erreicht!`);
+          }
+          return;
+        }
+      }
+
+      // Bewege NPC zum nächsten Waypoint
+      if (distance > 0) {
+        const moveDistance = this.pathConfig.speed * deltaTime;
+        const moveX = (dx / distance) * moveDistance;
+        const moveY = (dy / distance) * moveDistance;
+
+        this.x += moveX;
+        this.y += moveY;
+      }
+    }
+  }
+
+  /**
+   * Bekomme den aktuellen Pfad-Status
+   */
+  public getPathStatus() {
+    if (!this.pathConfig) {
+      return { pathActive: false };
+    }
+
+    return {
+      pathActive: this.pathConfig.enabled,
+      currentWaypoint: this.currentWaypointIndex,
+      totalWaypoints: this.pathConfig.path.length,
+      progress:
+        this.pathConfig.path.length > 0
+          ? this.currentWaypointIndex / this.pathConfig.path.length
+          : 0,
+    };
+  }
+
   public render(ctx: CanvasRenderingContext2D) {
     if (this.spriteLoaded && this.sprite) {
-      ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+      if (this.spriteSheetConfig) {
+        const { row, col, width, height } = this.spriteSheetConfig;
+        const sourceX = col * width;
+        const sourceY = row * height;
+
+        ctx.drawImage(
+          this.sprite,
+          sourceX,
+          sourceY,
+          width,
+          height,
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+        );
+      } else {
+        ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+      }
     } else {
-      // Fallback: Draw a colored rectangle
       ctx.fillStyle = Colors.orange;
       ctx.fillRect(this.x, this.y, this.width, this.height);
 
@@ -68,7 +190,6 @@ export class NPC {
       ctx.lineWidth = 2;
       ctx.strokeRect(this.x, this.y, this.width, this.height);
 
-      // Draw name label
       ctx.save();
       ctx.fillStyle = Colors.white;
       ctx.font = `${Fonts.sizes.small} ${Fonts.body}`;
@@ -79,23 +200,56 @@ export class NPC {
     }
   }
 
+  /**
+   * Debug: Zeichne den Pfad
+   */
+  public renderPath(ctx: CanvasRenderingContext2D) {
+    if (!this.pathConfig?.path || this.pathConfig.path.length === 0) {
+      return;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(100, 200, 255, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(100, 200, 255, 0.5)';
+
+    ctx.beginPath();
+    ctx.moveTo(this.pathConfig.path[0].x, this.pathConfig.path[0].y);
+    for (let i = 1; i < this.pathConfig.path.length; i++) {
+      ctx.lineTo(this.pathConfig.path[i].x, this.pathConfig.path[i].y);
+    }
+    ctx.stroke();
+
+    this.pathConfig.path.forEach((waypoint, index) => {
+      if (index === this.currentWaypointIndex) {
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+      } else if (index < this.currentWaypointIndex) {
+        ctx.fillStyle = 'rgba(200, 200, 0, 0.5)';
+      } else {
+        ctx.fillStyle = 'rgba(100, 200, 255, 0.7)';
+      }
+
+      ctx.beginPath();
+      ctx.arc(waypoint.x, waypoint.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.restore();
+  }
+
   public renderInteractionPrompt(ctx: CanvasRenderingContext2D) {
     ctx.save();
 
-    // Draw "Press E" prompt above NPC
     const promptX = this.x + this.width / 2;
     const promptY = this.y - 40;
 
-    // Background (larger box)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(promptX - 50, promptY - 20, 100, 28);
 
-    // Border
     ctx.strokeStyle = Colors.moccasin;
     ctx.lineWidth = 2;
     ctx.strokeRect(promptX - 50, promptY - 20, 100, 28);
 
-    // Text (larger font)
     ctx.fillStyle = Colors.moccasin;
     ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
     ctx.textAlign = 'center';
@@ -142,6 +296,13 @@ export class NPC {
   ): boolean {
     const playerCenterX = playerX + playerWidth / 2;
     const playerCenterY = playerY + playerHeight / 2;
-    return this.isInRange(playerCenterX, playerCenterY);
+    const npcCenterX = this.x + this.width / 2;
+    const npcCenterY = this.y + this.height / 2;
+
+    const distance = Math.sqrt(
+      Math.pow(playerCenterX - npcCenterX, 2) + Math.pow(playerCenterY - npcCenterY, 2),
+    );
+
+    return distance <= this.interactionRadius;
   }
 }

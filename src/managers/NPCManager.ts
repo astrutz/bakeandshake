@@ -1,4 +1,4 @@
-import { NPC, type NPCConfig } from '../entities/NPC';
+import { NPC, type NPCConfig, type NPCPathConfig } from '../entities/NPC';
 import { Player } from '../entities/Player';
 import { CollisionSystem } from '../physics/CollisionSystem';
 
@@ -6,6 +6,7 @@ export class NPCManager {
   private npcs: Map<string, NPC> = new Map();
   private nearbyNPC: NPC | null = null;
   private collisionSystem: CollisionSystem | null = null;
+  private debugPathsEnabled: boolean = true;
 
   constructor() {}
 
@@ -28,8 +29,26 @@ export class NPCManager {
   }
 
   /**
+   * Setze einen Pfad für einen NPC
+   */
+  public setNPCPath(npcId: string, pathConfig: NPCPathConfig) {
+    const npc = this.npcs.get(npcId);
+    if (npc) {
+      npc.setPath(pathConfig);
+    } else {
+      console.warn(`NPC mit ID ${npcId} nicht gefunden!`);
+    }
+  }
+
+  /**
+   * Aktiviere oder deaktiviere Debug Pfad-Anzeige
+   */
+  public setDebugPaths(enabled: boolean) {
+    this.debugPathsEnabled = enabled;
+  }
+
+  /**
    * Register NPC collisions with the collision system
-   * Store reference for dynamic updates
    */
   public registerCollisions(collisionSystem: CollisionSystem) {
     this.collisionSystem = collisionSystem;
@@ -38,15 +57,11 @@ export class NPCManager {
 
   /**
    * Update collision boxes - only add visible NPCs
-   * Call this whenever NPC visibility changes
    */
   public updateCollisions() {
     if (!this.collisionSystem) return;
 
-    // Note: This adds collisions on top of existing ones
-    // The collision system should be cleared before calling this
     this.npcs.forEach((npc) => {
-      // Only add collision for visible NPCs
       if (!npc.hidden) {
         this.collisionSystem!.addCollisionRect(npc.getCollisionBox());
       }
@@ -56,14 +71,13 @@ export class NPCManager {
   /**
    * Update NPC states and check for nearby NPCs
    */
-  public update(player: Player) {
+  public update(player: Player, deltaTime: number) {
     this.nearbyNPC = null;
 
-    // Find the closest NPC in range
-    let closestDistance = Infinity;
-
+    // Update alle NPCs (einschließlich Pfad-Bewegung)
     this.npcs.forEach((npc) => {
-      // Skip hidden NPCs
+      npc.updatePath(deltaTime);
+
       if (npc.hidden) return;
 
       if (npc.canInteractWith(player.x, player.y, player.width, player.height)) {
@@ -76,8 +90,7 @@ export class NPCManager {
           Math.pow(playerCenterX - npcCenterX, 2) + Math.pow(playerCenterY - npcCenterY, 2),
         );
 
-        if (distance < closestDistance) {
-          closestDistance = distance;
+        if (!this.nearbyNPC || distance < this.getDistance(this.nearbyNPC, player)) {
           this.nearbyNPC = npc;
         }
       }
@@ -85,12 +98,28 @@ export class NPCManager {
   }
 
   /**
+   * Hilfsmethode zur Distanzberechnung
+   */
+  private getDistance(npc: NPC, player: Player): number {
+    const playerCenterX = player.x + player.width / 2;
+    const playerCenterY = player.y + player.height / 2;
+    const npcCenterX = npc.x + npc.width / 2;
+    const npcCenterY = npc.y + npc.height / 2;
+
+    return Math.sqrt(
+      Math.pow(playerCenterX - npcCenterX, 2) + Math.pow(playerCenterY - npcCenterY, 2),
+    );
+  }
+
+  /**
    * Render all NPCs
    */
   public render(ctx: CanvasRenderingContext2D) {
     this.npcs.forEach((npc) => {
-      // Skip hidden NPCs
       if (!npc.hidden) {
+        if (this.debugPathsEnabled) {
+          npc.renderPath(ctx);
+        }
         npc.render(ctx);
       }
     });
