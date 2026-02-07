@@ -103,8 +103,9 @@ export class CustomerManager {
           npc.y = customer.targetY;
           customer.isWalkingIn = false;
           npc.isWalking = false; // STOP ANIMATION
+          npc.setDirection('left'); // FACE LEFT (row 1 in sprite sheet)
           customer.walkDirection = undefined;
-          console.log(`✅ Customer ${npc.name} arrived at position`);
+          console.log(`✅ Customer ${npc.name} arrived at position and facing left`);
 
           // Update collisions now that customer has stopped
           if (this.onVisibilityChange) {
@@ -146,9 +147,6 @@ export class CustomerManager {
               npc.setDirection('right');
             }
           }
-
-          // Update animation frame
-          npc.updateAnimation(deltaTime);
         }
       }
     }
