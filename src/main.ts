@@ -3,6 +3,7 @@ import { Game } from './game';
 import { AmbientAudioManager } from './audio/AmbientAudioManager.ts';
 import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
+import { initRecipeBookOverview } from './recipe-book/recipe-book';
 
 // Get the existing canvas element
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -76,3 +77,6 @@ musicToggleBtn?.addEventListener('click', async () => {
 
 // optional: Autostart Game
 game.start();
+
+// Initialize recipe book overview overlay
+initRecipeBookOverview();
