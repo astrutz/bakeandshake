@@ -296,7 +296,7 @@ function drawTitle(context: CanvasRenderingContext2D, layout: MenuLayout, width:
   const titleX = width / 2 - titleWidth / 2;
   const titleBoxY = titleY - titleHeight / 2;
 
-  context.fillStyle = 'rgba(255, 228, 181, 0.92)';
+  context.fillStyle = Colors.moccasin;
   context.strokeStyle = Colors.chocolate;
   context.lineWidth = 3;
   drawPixelRoundRect(context, titleX, titleBoxY, titleWidth, titleHeight, 10);
