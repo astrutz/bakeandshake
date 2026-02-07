@@ -6,13 +6,19 @@ import { DebugRenderer } from './utils/DebugRenderer';
 import { NPCManager } from './managers/NPCManager';
 import { CoinManager } from './managers/CoinManager';
 import { XPManager } from './managers/XPManager';
+import { CustomerManager, type CustomerQueueEntry } from './managers/CustomerManager';
+import { InventoryManager } from './managers/InventoryManager';
 import { SaveManager } from './managers/SaveManager';
 import { testCollisions, loadCollisionsFromFile } from './data/collisions';
 import { npcConfigs } from './data/npcs';
+import { SoundManager } from './audio/SoundManager.ts';
+import { SOUND_IDS } from './audio/SoundId.ts';
+import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
 
 export class Game {
   private canvas: HTMLCanvasElement;
+  private soundManager: SoundManager;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
   private dialogBox: DialogBox;
@@ -22,6 +28,8 @@ export class Game {
   private npcManager: NPCManager;
   private coinManager: CoinManager;
   private xpManager: XPManager;
+  private customerManager: CustomerManager;
+  private inventoryManager: InventoryManager;
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
 
@@ -45,8 +53,15 @@ export class Game {
   private frameCount: number = 0;
   private fpsUpdateTime: number = 0;
 
-  constructor(canvas: HTMLCanvasElement) {
+  // Current level
+  private currentLevel: number = 1;
+
+  // Track which customer we're currently interacting with
+  private currentInteractingCustomer: CustomerQueueEntry | null = null;
+
+  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
     this.canvas = canvas;
+    this.soundManager = soundManager;
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Failed to get 2D context');
@@ -56,7 +71,7 @@ export class Game {
     // Disable image smoothing for crisp pixel art
     this.ctx.imageSmoothingEnabled = false;
 
-    // Set canvas resolution for 32x32 tiles (40×30 tiles = 1280×960)
+    // Set canvas resolution for 32x32 tiles (40×30 tiles = 1024×768)
     this.canvas.width = GameConfig.canvas.width;
     this.canvas.height = GameConfig.canvas.height;
 
@@ -73,7 +88,7 @@ export class Game {
     );
 
     // Initialize dialog box
-    this.dialogBox = new DialogBox();
+    this.dialogBox = new DialogBox(soundManager);
 
     // Initialize pause menu
     this.pauseMenu = new PauseMenu();
@@ -83,6 +98,21 @@ export class Game {
 
     // Initialize XP manager with level up callback
     this.xpManager = new XPManager(0, 1, this.handleLevelUp.bind(this));
+
+    // Initialize inventory
+    this.inventoryManager = new InventoryManager();
+
+    // Initialize customer manager (no auto-dialog on arrival)
+    this.customerManager = new CustomerManager(
+      this.handleCustomerArrive.bind(this),
+      this.handleOrderComplete.bind(this),
+    );
+
+    this.customerManager = new CustomerManager(
+      this.handleCustomerArrive.bind(this),
+      this.handleOrderComplete.bind(this),
+      this.handleCustomerVisibilityChange.bind(this), // Add this
+    );
 
     // Initialize collision system with test data
     this.collisionSystem = new CollisionSystem(testCollisions);
@@ -105,6 +135,44 @@ export class Game {
 
     // Try to auto-load save on startup
     this.tryAutoLoad();
+
+    // Start level 1
+    this.startLevel(1);
+  }
+
+  private startLevel(level: number) {
+    this.currentLevel = level;
+    const customerFlow = getCustomerFlow(level);
+
+    if (!customerFlow) {
+      console.warn(`No customer flow defined for level ${level}`);
+      return;
+    }
+
+    console.log(`🎮 Starting Level ${level}`);
+
+    // Schedule all customers for this level
+    customerFlow.customers.forEach((customerData) => {
+      const npc = this.npcManager.addNPC(customerData.npcConfig);
+      this.customerManager.scheduleCustomer(npc, customerData.order, customerData.arrivalTime);
+    });
+  }
+
+  private handleCustomerVisibilityChange() {
+    // Rebuild collisions when customer visibility changes
+    this.collisionSystem.clearCollisionRects();
+    this.collisionSystem.addCollisionRects(testCollisions);
+    this.npcManager.updateCollisions();
+  }
+
+  private handleCustomerArrive(customer: CustomerQueueEntry) {
+    // Just log the arrival, don't show dialog automatically
+    console.log(`👤 ${customer.npc.name} has arrived! Walk up to them and press E to talk.`);
+  }
+
+  private handleOrderComplete(order: any, rewards: { coins: number; xp: number }) {
+    this.coinManager.addCoins(rewards.coins);
+    this.xpManager.addXP(rewards.xp);
   }
 
   private handleLevelUp(level: number, rewards?: { coins?: number; unlocks?: string[] }) {
@@ -169,6 +237,34 @@ export class Game {
         console.log(
           `XP: ${this.xpManager.getCurrentXP()} | Level: ${this.xpManager.getCurrentLevel()}`,
         );
+        return;
+      }
+
+      // Add bread to inventory with B key (for testing)
+      if ((e.key === 'b' || e.key === 'B') && !this.pauseMenu.isPausedState()) {
+        this.inventoryManager.addItem('bread', 1);
+        return;
+      }
+
+      // Complete current order with O key (for testing)
+      if ((e.key === 'o' || e.key === 'O') && !this.pauseMenu.isPausedState()) {
+        // Check if we're near any customer right now
+        const nearbyCustomer = this.customerManager.getNearbyCustomer(this.player);
+
+        if (nearbyCustomer) {
+          const order = nearbyCustomer.order;
+          if (this.inventoryManager.hasItem(order.item, order.quantity)) {
+            this.inventoryManager.removeItem(order.item, order.quantity);
+            this.customerManager.completeOrder(order.customerId);
+            // Show thank you dialog
+            this.dialogBox.show(nearbyCustomer.npc.getNextDialog());
+            this.player.setMovementLocked(true);
+          } else {
+            console.log(`Not enough ${order.item}! Need ${order.quantity}`);
+          }
+        } else {
+          console.log('No customer nearby to deliver to!');
+        }
         return;
       }
 
@@ -293,23 +389,37 @@ export class Game {
   }
 
   private handleInteraction() {
+    // First check for regular NPCs
     const nearbyNPC = this.npcManager.getNearbyNPC();
 
-    if (nearbyNPC) {
+    // Then check for customers
+    const nearbyCustomer = this.customerManager.getNearbyCustomer(this.player);
+
+    // Prioritize customers over regular NPCs
+    const interactTarget = nearbyCustomer ? nearbyCustomer.npc : nearbyNPC;
+
+    if (interactTarget) {
       if (this.dialogBox.getIsVisible()) {
         // If dialog is already showing, advance to next line
         if (this.dialogBox.getIsComplete()) {
-          const nextDialog = nearbyNPC.getNextDialog();
+          const nextDialog = interactTarget.getNextDialog();
           this.dialogBox.show(nextDialog);
+          this.soundManager.playSound(SOUND_IDS.NPC_TALK);
         } else {
           this.dialogBox.skip();
         }
       } else {
         // Start new conversation
-        const dialog = nearbyNPC.getCurrentDialog();
+        const dialog = interactTarget.getCurrentDialog();
         this.dialogBox.show(dialog);
+        this.soundManager.playSound(SOUND_IDS.NPC_TALK);
         // Lock player movement when dialog opens
         this.player.setMovementLocked(true);
+
+        // Track which customer we're interacting with
+        if (nearbyCustomer) {
+          this.currentInteractingCustomer = nearbyCustomer;
+        }
       }
     }
   }
@@ -345,6 +455,9 @@ export class Game {
     if (this.pauseMenu.isPausedState()) {
       return;
     }
+
+    // Update customer manager (independent of serving)
+    this.customerManager.update(deltaTime, this.player);
 
     // Update player and get potential new position
     const { potentialX, potentialY } = this.player.update(deltaTime);
@@ -534,5 +647,13 @@ export class Game {
 
   public getXPManager(): XPManager {
     return this.xpManager;
+  }
+
+  public getCustomerManager(): CustomerManager {
+    return this.customerManager;
+  }
+
+  public getInventoryManager(): InventoryManager {
+    return this.inventoryManager;
   }
 }

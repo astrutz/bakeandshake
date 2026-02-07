@@ -6,18 +6,13 @@ import type { CollisionRect } from '../physics/CollisionSystem.ts';
  */
 export const testCollisions: CollisionRect[] = [
   // Top wall
-  { x: 0, y: 0, width: 2000, height: 50 },
+  { x: 0, y: 0, width: 1024, height: 2 },
   // Bottom wall
-  { x: 0, y: 1450, width: 2000, height: 50 },
+  { x: 0, y: 768, width: 1024, height: 50 },
   // Left wall
-  { x: 0, y: 0, width: 50, height: 1500 },
+  { x: 0, y: 0, width: 2, height: 768 },
   // Right wall
-  { x: 1950, y: 0, width: 50, height: 1500 },
-
-  // Obstacles in the middle
-  { x: 400, y: 300, width: 200, height: 100 },
-  { x: 800, y: 600, width: 150, height: 150 },
-  { x: 1200, y: 400, width: 100, height: 300 },
+  { x: 1024, y: 0, width: 50, height: 768 },
 ];
 
 /**

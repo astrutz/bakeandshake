@@ -5,6 +5,7 @@ import { CollisionSystem } from '../physics/CollisionSystem';
 export class NPCManager {
   private npcs: Map<string, NPC> = new Map();
   private nearbyNPC: NPC | null = null;
+  private collisionSystem: CollisionSystem | null = null;
 
   constructor() {}
 
@@ -28,10 +29,27 @@ export class NPCManager {
 
   /**
    * Register NPC collisions with the collision system
+   * Store reference for dynamic updates
    */
   public registerCollisions(collisionSystem: CollisionSystem) {
+    this.collisionSystem = collisionSystem;
+    this.updateCollisions();
+  }
+
+  /**
+   * Update collision boxes - only add visible NPCs
+   * Call this whenever NPC visibility changes
+   */
+  public updateCollisions() {
+    if (!this.collisionSystem) return;
+
+    // Note: This adds collisions on top of existing ones
+    // The collision system should be cleared before calling this
     this.npcs.forEach((npc) => {
-      collisionSystem.addCollisionRect(npc.getCollisionBox());
+      // Only add collision for visible NPCs
+      if (!npc.hidden) {
+        this.collisionSystem!.addCollisionRect(npc.getCollisionBox());
+      }
     });
   }
 
@@ -45,6 +63,9 @@ export class NPCManager {
     let closestDistance = Infinity;
 
     this.npcs.forEach((npc) => {
+      // Skip hidden NPCs
+      if (npc.hidden) return;
+
       if (npc.canInteractWith(player.x, player.y, player.width, player.height)) {
         const playerCenterX = player.x + player.width / 2;
         const playerCenterY = player.y + player.height / 2;
@@ -68,7 +89,10 @@ export class NPCManager {
    */
   public render(ctx: CanvasRenderingContext2D) {
     this.npcs.forEach((npc) => {
-      npc.render(ctx);
+      // Skip hidden NPCs
+      if (!npc.hidden) {
+        npc.render(ctx);
+      }
     });
   }
 
@@ -76,7 +100,7 @@ export class NPCManager {
    * Render interaction prompts for nearby NPCs
    */
   public renderInteractionPrompts(ctx: CanvasRenderingContext2D) {
-    if (this.nearbyNPC) {
+    if (this.nearbyNPC && !this.nearbyNPC.hidden) {
       this.nearbyNPC.renderInteractionPrompt(ctx);
     }
   }
