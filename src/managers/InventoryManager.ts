@@ -169,6 +169,8 @@ export class InventoryManager {
           // Filled box
           ctx.fillStyle = Colors.gold; // Gold
           ctx.fillRect(boxX, boxY, boxSize, boxSize);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(boxX, boxY, boxSize, boxSize);
         } else {
           // Empty box
           ctx.strokeStyle = 'rgba(255, 228, 181, 0.5)';
