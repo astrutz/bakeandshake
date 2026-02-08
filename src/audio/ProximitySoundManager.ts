@@ -35,6 +35,10 @@ export class ProximitySoundManager {
    * Update proximity sounds based on player position
    */
   public update(playerX: number, playerY: number): void {
+    if (this.soundManager.isMuted()) {
+      this.stopAll();
+      return;
+    }
     const playerCenterX = playerX + 16; // Assuming 32px player width/2
     const playerCenterY = playerY + 16;
 

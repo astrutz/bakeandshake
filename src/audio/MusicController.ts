@@ -3,7 +3,7 @@ import { SoundManager } from './SoundManager.ts';
 import { SOUND_IDS } from './SoundId.ts';
 
 export class MusicController {
-  private enabled = false;
+  private muted = true;
   private backgroundId: string;
 
   constructor(
@@ -12,31 +12,34 @@ export class MusicController {
     backgroundId: string = SOUND_IDS.BACKGROUND_COFFEE,
   ) {
     this.backgroundId = backgroundId;
+    this.soundManager.setMuted(true);
   }
 
   public isEnabled(): boolean {
-    return this.enabled;
+    return !this.muted;
   }
 
-  public start() {
-    if (this.enabled) return;
-    this.enabled = true;
+  public unmuteAll() {
+    if (!this.muted) return;
+    this.muted = false;
+    this.soundManager.setMuted(false);
     this.ambientManager.start();
     this.soundManager.playSound(this.backgroundId);
   }
 
-  public stop() {
-    if (!this.enabled) return;
-    this.enabled = false;
+  public muteAll() {
+    if (this.muted) return;
+    this.muted = true;
     this.ambientManager.stop();
-    this.soundManager.stopSound(this.backgroundId);
+    this.soundManager.stopAll();
+    this.soundManager.setMuted(true);
   }
 
   public toggle() {
-    if (this.enabled) {
-      this.stop();
+    if (this.muted) {
+      this.unmuteAll();
     } else {
-      this.start();
+      this.muteAll();
     }
   }
 }
