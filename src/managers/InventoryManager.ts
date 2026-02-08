@@ -112,6 +112,16 @@ export class InventoryManager {
   }
 
   /**
+   * Set quantity directly (used for loading saves)
+   */
+  public setItemQuantity(itemId: string, quantity: number): void {
+    const item = this.items.get(itemId);
+    if (!item) return;
+    const max = item.maxQuantity ?? quantity;
+    item.quantity = Math.max(0, Math.min(quantity, max));
+  }
+
+  /**
    * Render inventory display
    */
   public render(ctx: CanvasRenderingContext2D): void {

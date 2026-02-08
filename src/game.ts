@@ -47,6 +47,8 @@ export class Game {
   private notificationManager: NotificationManager;
   private musicController: MusicController;
   private musicToggleButton: MusicToggleButton;
+  private readonly defaultPlayerX = 500;
+  private readonly defaultPlayerY = 450;
 
   // Camera/viewport for the map
   private camera = {
@@ -97,7 +99,12 @@ export class Game {
     );
 
     // Initialize player at center of screen (1 tile = 32×32)
-    this.player = new Player(500, 450, GameConfig.player.width, GameConfig.player.height);
+    this.player = new Player(
+      this.defaultPlayerX,
+      this.defaultPlayerY,
+      GameConfig.player.width,
+      GameConfig.player.height,
+    );
 
     // Easter Egg
     this.evilBox = {
@@ -205,6 +212,31 @@ export class Game {
     });
   }
 
+  public resetToSavedOrDefault() {
+    const saveData = SaveManager.load();
+
+    this.resetSessionState();
+
+    if (saveData) {
+      this.currentLevel = saveData.level || 1;
+      this.player.setPosition(saveData.playerX, saveData.playerY);
+      this.coinManager.setCoins(saveData.coins || 0);
+      this.xpManager.setXP(saveData.xp || 0, saveData.level || 1);
+      this.inventoryManager.clear();
+      Object.entries(saveData.inventory || {}).forEach(([id, quantity]) => {
+        this.inventoryManager.setItemQuantity(id, quantity);
+      });
+    } else {
+      this.currentLevel = 1;
+      this.player.setPosition(this.defaultPlayerX, this.defaultPlayerY);
+      this.coinManager.setCoins(0);
+      this.xpManager.setXP(0, 1);
+      this.inventoryManager.clear();
+    }
+
+    this.startLevel(this.currentLevel);
+  }
+
   private handleCustomerVisibilityChange() {
     // Rebuild collisions when customer visibility changes
     this.npcManager.updateCollisions();
@@ -232,6 +264,16 @@ export class Game {
 
     // Show level complete screen
     this.levelCompleteScreen.show(stats);
+  }
+
+  private resetSessionState() {
+    this.customerManager.clear();
+    this.inventoryManager.clear();
+    this.bakingManager.reset();
+    this.dialogBox.hide();
+    this.levelCompleteScreen.hide();
+    this.pauseMenu.setPaused(false);
+    this.player.setMovementLocked(false);
   }
 
   private handleLevelCompleteSelection() {
@@ -542,6 +584,9 @@ export class Game {
       coins: this.coinManager.getCoins(),
       xp: this.xpManager.getCurrentXP(),
       level: this.xpManager.getCurrentLevel(),
+      inventory: Object.fromEntries(
+        this.inventoryManager.getAllItems().map((item) => [item.id, item.quantity]),
+      ),
     });
 
     if (success) {
@@ -558,6 +603,10 @@ export class Game {
       this.player.setPosition(saveData.playerX, saveData.playerY);
       this.coinManager.setCoins(saveData.coins || 0);
       this.xpManager.setXP(saveData.xp || 0, saveData.level || 1);
+      this.inventoryManager.clear();
+      Object.entries(saveData.inventory || {}).forEach(([id, quantity]) => {
+        this.inventoryManager.setItemQuantity(id, quantity);
+      });
       this.pauseMenu.showFeedback('✓ Game loaded successfully!');
     } else {
       this.pauseMenu.showFeedback('✗ No save data found');
@@ -911,43 +960,6 @@ export class Game {
       this.lastTime = 0;
     }
   }
-
-  public getPlayer(): Player {
-    return this.player;
-  }
-
-  public getCollisionSystem(): CollisionSystem {
-    return this.collisionSystem;
-  }
-
-  public getDebugRenderer(): DebugRenderer {
-    return this.debugRenderer;
-  }
-
-  public getNPCManager(): NPCManager {
-    return this.npcManager;
-  }
-
-  public getPauseMenu(): PauseMenu {
-    return this.pauseMenu;
-  }
-
-  public getCoinManager(): CoinManager {
-    return this.coinManager;
-  }
-
-  public getXPManager(): XPManager {
-    return this.xpManager;
-  }
-
-  public getCustomerManager(): CustomerManager {
-    return this.customerManager;
-  }
-
-  public getInventoryManager(): InventoryManager {
-    return this.inventoryManager;
-  }
-
   public getProximitySoundManager(): ProximitySoundManager {
     return this.proximitySoundManager;
   }

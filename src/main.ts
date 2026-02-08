@@ -119,6 +119,7 @@ const menu = createMainMenu(
     onStart: () => {
       isRunning = true;
       toggleBtn && (toggleBtn.textContent = 'Pause');
+      game.resetToSavedOrDefault();
       game.start();
     },
     onRecipes: () => {
@@ -130,5 +131,6 @@ const menu = createMainMenu(
 
 window.addEventListener('open-main-menu', () => {
   game.stop();
+  game.resetToSavedOrDefault();
   menu.show();
 });

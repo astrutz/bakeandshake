@@ -4,6 +4,7 @@ export interface SaveData {
   coins: number;
   xp: number;
   level: number;
+  inventory: Record<string, number>;
   timestamp: number;
   version: string;
 }
@@ -134,6 +135,8 @@ export class SaveManager {
       Number.isFinite(saveData.coins) &&
       Number.isFinite(saveData.xp) &&
       Number.isFinite(saveData.level) &&
+      typeof saveData.inventory === 'object' &&
+      saveData.inventory !== null &&
       Number.isFinite(saveData.timestamp) &&
       saveData.version.length > 0
     );
