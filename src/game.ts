@@ -21,12 +21,16 @@ import { BakingManager } from './managers/BakingManager';
 import { NotificationManager } from './ui/NotificationManager.ts';
 import { MusicToggleButton } from './ui/MusicToggleButton.ts';
 import { MusicController } from './audio/MusicController.ts';
+import { ProximitySoundManager } from './audio/ProximitySoundManager.ts';
+import { type NPCConfig } from './entities/NPC.ts';
 
 export class Game {
   private canvas: HTMLCanvasElement;
   private soundManager: SoundManager;
+  private proximitySoundManager: ProximitySoundManager;
   private ctx: CanvasRenderingContext2D;
   private player: Player;
+  private evilBox: NPCConfig;
   private dialogBox: DialogBox;
   private pauseMenu: PauseMenu;
   private collisionSystem: CollisionSystem;
@@ -67,7 +71,11 @@ export class Game {
   // Current level
   private currentLevel: number = 1;
 
-  constructor(canvas: HTMLCanvasElement, soundManager: SoundManager, musicController: MusicController) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    soundManager: SoundManager,
+    musicController: MusicController,
+  ) {
     this.canvas = canvas;
     this.soundManager = soundManager;
     this.musicController = musicController;
@@ -89,15 +97,31 @@ export class Game {
     );
 
     // Initialize player at center of screen (1 tile = 32×32)
-    this.player = new Player(
-      500,
-      450,
-      GameConfig.player.width,
-      GameConfig.player.height,
-    );
+    this.player = new Player(500, 450, GameConfig.player.width, GameConfig.player.height);
+
+    // Easter Egg
+    this.evilBox = {
+      id: 'evilBox',
+      name: 'Olli',
+      x: 974,
+      y: 236,
+      spritePath: '/sprites/EvilBox.png',
+      spriteSheet: {
+        row: 0, // Row 2 (0-indexed, so row 1 = second row)
+        col: 0, // Column 1 (0-indexed, so col 0 = first column)
+        width: 32,
+        height: 32,
+      },
+      dialogLines: ['Meow', 'Meow Meow ...', 'Meow', 'ICH HAB HUNGER'],
+      framesPerDirection: 12,
+      type: 'EVILBOX',
+    } as NPCConfig;
 
     // Initialize dialog box
     this.dialogBox = new DialogBox(soundManager);
+
+    // Initialize proximity sound manager
+    this.proximitySoundManager = new ProximitySoundManager(soundManager);
 
     // Initialize pause menu
     this.pauseMenu = new PauseMenu();
@@ -124,6 +148,7 @@ export class Game {
     // Initialize NPC manager and add NPCs
     this.npcManager = new NPCManager();
     this.loadNPCs();
+    this.npcManager.addNPC(this.evilBox).isWalking = true;
 
     // Register NPC collisions
     this.npcManager.registerCollisions(this.collisionSystem);
@@ -565,7 +590,23 @@ export class Game {
         if (this.dialogBox.getIsComplete()) {
           const nextDialog = interactTarget.getNextDialog();
           this.dialogBox.show(nextDialog);
-          this.soundManager.playSound(SOUND_IDS.NPC_TALK);
+
+          switch (interactTarget.type) {
+            case 'HUMAN':
+              this.soundManager.playSound(SOUND_IDS.NPC_TALK);
+              break;
+            case 'EVILBOX':
+              const sounds = [SOUND_IDS.CAT_MEOW, SOUND_IDS.CAT_MEOW_2, SOUND_IDS.EVIL_BOX];
+              // Wählt einen zufälligen Index aus dem Array
+              const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+              // Spielt den ausgewählten Sound ab
+              this.soundManager.playSound(randomSound);
+              break;
+          }
+
+          if (interactTarget.type === 'HUMAN') {
+            this.soundManager.playSound(SOUND_IDS.NPC_TALK);
+          }
         } else {
           this.dialogBox.skip();
         }
@@ -573,7 +614,18 @@ export class Game {
         // Start new conversation
         const dialog = interactTarget.getCurrentDialog();
         this.dialogBox.show(dialog);
-        this.soundManager.playSound(SOUND_IDS.NPC_TALK);
+        switch (interactTarget.type) {
+          case 'HUMAN':
+            this.soundManager.playSound(SOUND_IDS.NPC_TALK);
+            break;
+          case 'EVILBOX':
+            const sounds = [SOUND_IDS.CAT_MEOW, SOUND_IDS.CAT_MEOW_2, SOUND_IDS.EVIL_BOX];
+            // Wählt einen zufälligen Index aus dem Array
+            const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+            // Spielt den ausgewählten Sound ab
+            this.soundManager.playSound(randomSound);
+            break;
+        }
         // Lock player movement when dialog opens
         this.player.setMovementLocked(true);
       }
@@ -603,6 +655,9 @@ export class Game {
 
     // Update coin animation
     this.coinManager.update(deltaTime);
+
+    // Update proximity sounds each frame
+    this.proximitySoundManager.update(this.player.x, this.player.y);
 
     // Update XP bar animation
     this.xpManager.update(deltaTime);
@@ -656,12 +711,12 @@ export class Game {
     this.npcManager.update(this.player);
 
     // Update all NPC animations
-    this.npcManager.getAllNPCs().forEach(npc => {
+    this.npcManager.getAllNPCs().forEach((npc) => {
       npc.updateAnimation(deltaTime);
     });
 
     // Update customer animations - ADD THIS
-    this.customerManager.getActiveCustomers().forEach(customer => {
+    this.customerManager.getActiveCustomers().forEach((customer) => {
       customer.npc.updateAnimation(deltaTime);
     });
 
@@ -743,9 +798,7 @@ export class Game {
 
     // Render interaction prompts (must be after NPCs and player for proper layering)
     // Create a set of customer NPC IDs to exclude
-    const customerNPCIds = new Set(
-      this.customerManager.getActiveCustomers().map(c => c.npc.id)
-    );
+    const customerNPCIds = new Set(this.customerManager.getActiveCustomers().map((c) => c.npc.id));
     this.npcManager.renderInteractionPrompts(this.ctx, customerNPCIds);
 
     // Render customer-specific interaction prompts
@@ -757,7 +810,6 @@ export class Game {
     // Render baking interaction prompt
     this.bakingManager.renderInteractionPrompt(this.ctx, this.player);
 
-
     // Render player bounding box in debug mode
     this.debugRenderer.renderEntityBounds(
       this.ctx,
@@ -768,10 +820,14 @@ export class Game {
       '#00ff00',
     );
 
+    this.proximitySoundManager.getSoundSources.forEach((s) => {
+      this.debugRenderer.renderPointWithRadius(this.ctx, s.x, s.y, s.proximityRadius, s.debugColor);
+    });
+
     this.ctx.restore();
 
     // Render XP bar (bottom-left corner)
-    this.xpManager.render(this.ctx, this.canvas.height);
+    this.xpManager.render(this.ctx, this.canvas.height, this.currentLevel);
 
     // Render dialog box (always on top, not affected by camera)
     this.dialogBox.render(this.ctx, this.canvas.width, this.canvas.height);
@@ -849,6 +905,7 @@ export class Game {
 
   public stop() {
     if (this.animationFrameId !== null) {
+      // this.proximitySoundManager.stopAll();
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
       this.lastTime = 0;
@@ -889,5 +946,9 @@ export class Game {
 
   public getInventoryManager(): InventoryManager {
     return this.inventoryManager;
+  }
+
+  public getProximitySoundManager(): ProximitySoundManager {
+    return this.proximitySoundManager;
   }
 }

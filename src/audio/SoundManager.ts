@@ -33,6 +33,10 @@ export class SoundManager {
     audio.currentTime = 0;
   }
 
+  public getSoundEffect(id: string) {
+    return this.effects.get(id);
+  }
+
   public stopAll(): void {
     this.effects.forEach((audio) => {
       audio.pause();
