@@ -9,6 +9,8 @@ export const SOUND_IDS = {
   CAT_PURRING: 'catPurring',
   EVIL_BOX: 'evilBox',
   OVEN_AMBIENCE: 'ovenAmbience',
+  COIN_FLIP: 'coinFlip',
+  LEVEL_COMPLETED: 'levelCompleted',
 } as const;
 
 export type SoundID = (typeof SOUND_IDS)[keyof typeof SOUND_IDS];

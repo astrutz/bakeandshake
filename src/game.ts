@@ -227,6 +227,8 @@ export class Game {
       currentLevel: this.xpManager.getCurrentLevel(),
     };
 
+    this.soundManager.playSound(SOUND_IDS.LEVEL_COMPLETED);
+
     // Lock player movement
     this.player.setMovementLocked(true);
 
@@ -284,6 +286,7 @@ export class Game {
   private handleOrderComplete(rewards: { coins: number; xp: number }) {
     this.coinManager.addCoins(rewards.coins);
     this.xpManager.addXP(rewards.xp);
+    this.soundManager.playSound(SOUND_IDS.COIN_FLIP);
   }
 
   private handleLevelUp(level: number, rewards?: { coins?: number; unlocks?: string[] }) {

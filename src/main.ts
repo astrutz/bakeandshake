@@ -29,6 +29,9 @@ soundManager.registerSound(SOUND_IDS.OVEN_AMBIENCE, '/audio/fire-crackling-sound
   loop: true,
 });
 
+soundManager.registerSound(SOUND_IDS.COIN_FLIP, '/audio/coins.m4a', { volume: 0.5 });
+soundManager.registerSound(SOUND_IDS.LEVEL_COMPLETED, '/audio/wand.m4a', { volume: 0.5 });
+
 soundManager.registerSound(SOUND_IDS.CAT_MEOW, '/audio/cat-meow.mp3', { volume: 0.5 });
 soundManager.registerSound(SOUND_IDS.CAT_MEOW_2, '/audio/cat-meow-2.mp3', { volume: 0.5 });
 soundManager.registerSound(SOUND_IDS.EVIL_BOX, '/audio/martin-speaking.mp3', { volume: 0.4 });
