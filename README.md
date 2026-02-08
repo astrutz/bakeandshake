@@ -1,6 +1,8 @@
 # <img src="/public/favicon.svg" width="24"> [Bake n' Shake](https://bakeandshake.netlify.app) <img src="/public/favicon.svg" width="24">
 Interactive 2D pixel art game that lets you run your own bakery.
 
+<img width="1315" height="987" alt="image" src="https://github.com/user-attachments/assets/fe862741-9b30-43d5-8a78-7ae07430098b" />
+
 ## Prerequisites
 `node@v22`   
 `npm@v10.9`
