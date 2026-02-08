@@ -50,28 +50,10 @@ npm run build
 |-----|--------|
 | `D` | Toggle debug mode (shows collision boxes, FPS, player position) |
 
-## 🗺️ Map Integration
-
-Place your Tiled JSON export in the `/public` folder and load it:
-
-```typescript
-const game = new Game(canvas);
-await game.loadCollisionsFromTiled('/map/bakery.json');
-```
-
-Your Tiled map should have an **Object Layer** named "Collision" with rectangle objects defining walls and obstacles.
-
-## 🥐 NPCs
-
-NPCs are configured in `src/data/npcs.ts`. Each NPC has:
-- Position on the map
-- Multiple dialog lines that cycle through
-- Interaction radius
-- Optional sprite image
-
 ## 🎯 Tech Stack
 
-- **HTML5 Canvas**
-- **CSS**
-- **TypeScript**
-- **Vite**
+- [**HTML5 Canvas**](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+- [**CSS**](https://developer.mozilla.org/en-US/docs/Web/CSS)
+- [**TypeScript**](https://www.typescriptlang.org/)
+- [**Vite**](https://vite.dev/)
+- [**Love**](https://www.youtube.com/watch?v=QBbCNH8TyK8&list=RDQBbCNH8TyK8&start_radio=1&pp=ygULeCBmYWN0b3JpdXOgBwE%3D)
