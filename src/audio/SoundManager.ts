@@ -6,6 +6,7 @@ type SoundEffectOptions = {
 
 export class SoundManager {
   private effects: Map<string, HTMLAudioElement> = new Map();
+  private muted: boolean = false;
 
   public registerSound(id: string, src: string, options: SoundEffectOptions = {}) {
     const audio = new Audio(src);
@@ -16,6 +17,7 @@ export class SoundManager {
   }
 
   public playSound(id: string): void {
+    if (this.muted) return;
     console.log(`🔊 Sound: ${id}`);
     const audio = this.effects.get(id);
     if (!audio) {
@@ -42,6 +44,17 @@ export class SoundManager {
       audio.pause();
       audio.currentTime = 0;
     });
+  }
+
+  public setMuted(muted: boolean): void {
+    this.muted = muted;
+    if (muted) {
+      this.stopAll();
+    }
+  }
+
+  public isMuted(): boolean {
+    return this.muted;
   }
 
   public isPlaying(id: string): boolean {
