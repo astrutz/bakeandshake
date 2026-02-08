@@ -14,6 +14,16 @@ export class XPManager {
   private levelUpAnimationTimer: number = 0;
   private readonly LEVEL_UP_DURATION = 1; // seconds
 
+  // Sprite animation - ADD THESE
+  private sprite: HTMLImageElement | null = null;
+  private spriteLoaded: boolean = false;
+  private currentFrame: number = 0;
+  private animationTimer: number = 0;
+  private readonly ANIMATION_SPEED = 0.2; // seconds per frame
+  private readonly SPRITE_FRAMES = 3; // 3 columns
+  private readonly SPRITE_FRAME_WIDTH = 32; // Adjust to your sprite's frame width
+  private readonly SPRITE_FRAME_HEIGHT = 32; // Adjust to your sprite's frame height
+
   // Reward callback
   private onLevelUp?: (level: number, rewards?: { coins?: number; unlocks?: string[] }) => void;
 
@@ -26,6 +36,23 @@ export class XPManager {
     this.currentLevel = initialLevel;
     this.onLevelUp = onLevelUp;
     this.updateBarProgress();
+    this.loadSprite();
+  }
+
+  /**
+   * Load the animated sprite
+   */
+  private loadSprite() {
+    this.sprite = new Image();
+    this.sprite.src = '/sprites/xp-animation.png'; // UPDATE WITH YOUR SPRITE PATH
+    this.sprite.onload = () => {
+      this.spriteLoaded = true;
+      console.log('XP sprite loaded successfully');
+    };
+    this.sprite.onerror = () => {
+      console.error('Failed to load XP sprite');
+      this.spriteLoaded = false;
+    };
   }
 
   public getCurrentXP(): number {
@@ -92,6 +119,13 @@ export class XPManager {
   }
 
   public update(deltaTime: number) {
+    // Animate sprite frames
+    this.animationTimer += deltaTime;
+    if (this.animationTimer >= this.ANIMATION_SPEED) {
+      this.animationTimer = 0;
+      this.currentFrame = (this.currentFrame + 1) % this.SPRITE_FRAMES;
+    }
+
     // Animate XP bar fill
     if (this.isAnimating) {
       const lerpSpeed = 3;
@@ -127,6 +161,12 @@ export class XPManager {
     const badgeSize = 48;
     const badgeX = x - badgeSize - 12;
     const badgeY = y - barHeight / 2;
+
+    // Sprite position - to the right of the bar
+    const spriteDisplaySize = 40;
+    const spriteGap = 12;
+    const spriteX = barWidth + 10 * spriteGap;
+    const spriteY = y - barHeight + spriteDisplaySize / 2;
 
     // Level label above the XP bar
     const levelLabel = `Level ${gameLevel}`;
@@ -216,13 +256,31 @@ export class XPManager {
       const xpNeededForLevel = nextLevelData.xpRequired - currentLevelData.xpRequired;
 
       ctx.fillStyle = Colors.moccasin;
-      ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
+      ctx.font = `bold ${Fonts.sizes.tiny} ${Fonts.body}`;
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';4;
+      ctx.textBaseline = 'middle';
       ctx.fillText(
         `${xpInCurrentLevel} / ${xpNeededForLevel} XP`,
         x + barWidth / 2,
         y - barHeight / 2,
+      );
+    }
+
+    // Draw animated sprite to the right of the bar
+    if (this.spriteLoaded && this.sprite) {
+      const sourceX = this.currentFrame * this.SPRITE_FRAME_WIDTH;
+      const sourceY = 0;
+
+      ctx.drawImage(
+        this.sprite,
+        sourceX,
+        sourceY,
+        this.SPRITE_FRAME_WIDTH,
+        this.SPRITE_FRAME_HEIGHT,
+        spriteX - 100,
+        spriteY,
+        spriteDisplaySize,
+        spriteDisplaySize
       );
     }
 
