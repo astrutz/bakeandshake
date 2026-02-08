@@ -1,7 +1,7 @@
 /**
  * Simple inventory system for baked goods
  */
-import { Colors } from '../config/theme.ts';
+import { Colors, Fonts } from '../config/theme.ts';
 
 export interface InventoryItem {
   id: string;
@@ -145,7 +145,7 @@ export class InventoryManager {
 
     // Title
     ctx.fillStyle = Colors.moccasin; // Moccasin
-    ctx.font = 'bold 16px Arial';
+    ctx.font = `bold ${Fonts.sizes.tiny} ${Fonts.body}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillText('Inventory', x + 10, y + 8);
@@ -157,10 +157,10 @@ export class InventoryManager {
       const maxBread = breadItem.maxQuantity || 0;
 
       // Draw bread icon and count
-      ctx.font = '24px Arial';
+      ctx.font = `${Fonts.sizes.medium} ${Fonts.body}`;
       ctx.fillText('🍞', x + 10, y + 28);
 
-      ctx.font = 'bold 20px Arial';
+      ctx.font = `bold ${Fonts.sizes.medium} ${Fonts.body}`;
       ctx.fillStyle = breadCount >= maxBread
         ? Colors.red // Red when full
         : Colors.moccasin; // Normal color

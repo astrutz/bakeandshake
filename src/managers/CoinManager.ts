@@ -133,7 +133,7 @@ export class CoinManager {
 
     // Coin count text
     ctx.fillStyle = Colors.moccasin;
-    ctx.font = `bold 28px ${Fonts.body}`;
+    ctx.font = `bold ${Fonts.sizes.medium} ${Fonts.body}`;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.coins.toString(), right - padding, top + height / 2);

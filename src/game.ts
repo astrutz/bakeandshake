@@ -15,7 +15,7 @@ import { SoundManager } from './audio/SoundManager.ts';
 import { SOUND_IDS } from './audio/SoundId.ts';
 import { getCustomerFlow } from './data/customerFlows';
 import { GameConfig } from './config/gameConfig';
-import { UI } from './config/theme';
+import { Fonts, UI } from './config/theme';
 import { LevelCompleteScreen, type LevelStats } from './ui/LevelCompleteScreen.ts';
 import { BakingManager } from './managers/BakingManager';
 import { NotificationManager } from './ui/NotificationManager.ts';
@@ -720,6 +720,9 @@ export class Game {
     // Update notification manager
     this.notificationManager.update();
 
+    // Update XP manager
+    this.xpManager.update(deltaTime);
+
     // Don't update game state if paused
     if (this.pauseMenu.isPausedState() || this.levelCompleteScreen.isVisibleState()) {
       return;
@@ -767,7 +770,7 @@ export class Game {
       npc.updateAnimation(deltaTime);
     });
 
-    // Update customer animations - ADD THIS
+    // Update customer animations
     this.customerManager.getActiveCustomers().forEach((customer) => {
       customer.npc.updateAnimation(deltaTime);
     });
@@ -929,7 +932,7 @@ export class Game {
       collisionCount: this.collisionSystem.getCollisionRects().length,
       fps: this.fps,
       level: this.currentLevel,
-      progress: `${progress.completed}/${progress.total} customers`, // Add this
+      progress: `${progress.completed}/${progress.total} customers`,
     });
   }
 
