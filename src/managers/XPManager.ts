@@ -215,18 +215,15 @@ export class XPManager {
       const xpInCurrentLevel = this.currentXP - currentLevelData.xpRequired;
       const xpNeededForLevel = nextLevelData.xpRequired - currentLevelData.xpRequired;
 
-      ctx.fillStyle = Colors.white;
+      ctx.fillStyle = Colors.moccasin;
       ctx.font = `bold ${Fonts.sizes.small} ${Fonts.body}`;
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = Alpha.shadowDark;
-      ctx.shadowBlur = 4;
+      ctx.textBaseline = 'middle';4;
       ctx.fillText(
         `${xpInCurrentLevel} / ${xpNeededForLevel} XP`,
         x + barWidth / 2,
         y - barHeight / 2,
       );
-      ctx.shadowBlur = 0;
     }
 
     // Level up notification

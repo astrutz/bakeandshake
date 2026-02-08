@@ -1,6 +1,7 @@
 /**
  * Simple inventory system for baked goods
  */
+import { Colors } from '../config/theme.ts';
 
 export interface InventoryItem {
   id: string;
@@ -138,12 +139,12 @@ export class InventoryManager {
     ctx.fillRect(x, y, width, height);
 
     // Border
-    ctx.strokeStyle = 'rgba(210, 105, 30, 1)'; // Chocolate
+    ctx.strokeStyle = Colors.chocolate; // Chocolate
     ctx.lineWidth = 3;
     ctx.strokeRect(x, y, width, height);
 
     // Title
-    ctx.fillStyle = 'rgba(255, 228, 181, 1)'; // Moccasin
+    ctx.fillStyle = Colors.moccasin; // Moccasin
     ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
@@ -161,8 +162,8 @@ export class InventoryManager {
 
       ctx.font = 'bold 20px Arial';
       ctx.fillStyle = breadCount >= maxBread
-        ? 'rgba(255, 100, 100, 1)' // Red when full
-        : 'rgba(255, 228, 181, 1)'; // Normal color
+        ? Colors.red // Red when full
+        : Colors.moccasin; // Normal color
       ctx.fillText(`${breadCount}/${maxBread}`, x + 45, y + 32);
 
       // Draw capacity indicator (small boxes)
@@ -176,8 +177,10 @@ export class InventoryManager {
 
         if (i < breadCount) {
           // Filled box
-          ctx.fillStyle = 'rgba(255, 215, 0, 1)'; // Gold
+          ctx.fillStyle = Colors.gold; // Gold
           ctx.fillRect(boxX, boxY, boxSize, boxSize);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(boxX, boxY, boxSize, boxSize);
         } else {
           // Empty box
           ctx.strokeStyle = 'rgba(255, 228, 181, 0.5)';
